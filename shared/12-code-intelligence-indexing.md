@@ -33,12 +33,16 @@ installed; both expose read-only MCP tools.
    block in `CLAUDE.md` / `AGENTS.md`.
 3. **Ignore the index**: `.gitnexus/` is in `.gitignore`; it is derived and
    rebuildable.
-4. **Keep it fresh automatically**: a `PostToolUse` hook re-runs `analyze`
-   after `git commit`, `git merge` and `git checkout`
-   (`templates/settings-hooks.json`); `analyze` never runs with the index
-   in use by another session.
-5. **Allow the commands**: project settings allow `Bash(npx gitnexus *)`
-   and the `mcp__gitnexus__*` tools (`templates/settings-permissions.json`).
+4. **Keep it fresh automatically**: a `PostToolUse` hook script re-runs
+   `analyze` after git commands that move `HEAD` (commit, merge, checkout,
+   switch, pull, rebase). The script parses the tool call as JSON on stdin
+   and never evaluates the command text (`templates/settings-hooks.json`,
+   `templates/gitnexus-reindex-hook.sh`).
+5. **Allow the commands**: project settings pre-approve the exact
+   `npx gitnexus status|analyze|list` commands and the read-only
+   `mcp__gitnexus__*` tools (`templates/settings-permissions.json`). No
+   wildcard after `npx` (its flags can run arbitrary commands behind an
+   allowed prefix); `cypher`, `rename` and `group_sync` stay prompted.
 6. **Add the skills**: copy the `gitnexus-*` skill family and
    `reindex-check` (`shared/11` §1) into `.claude/skills/`.
 7. **Document index**: register the project's read-only text-index MCP

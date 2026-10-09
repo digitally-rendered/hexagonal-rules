@@ -1,8 +1,11 @@
 {
-  "$comment": "Project .claude/settings.json fragment: allow the indexing commands and the read-only tools without prompts. rename and group_sync are deliberately not pre-approved; they write.",
+  "$comment": "Project .claude/settings.json fragment: allow exact indexing commands and read-only tools without prompts. No wildcard after npx (npx accepts flags such as --call that run arbitrary commands behind an allowed prefix). cypher, rename and group_sync are deliberately not pre-approved: cypher runs free-form graph queries, the other two write.",
   "permissions": {
     "allow": [
-      "Bash(npx gitnexus *)",
+      "Bash(npx gitnexus status)",
+      "Bash(npx gitnexus analyze)",
+      "Bash(npx gitnexus analyze --embeddings)",
+      "Bash(npx gitnexus list)",
       "mcp__gitnexus__list_repos",
       "mcp__gitnexus__query",
       "mcp__gitnexus__context",
@@ -12,7 +15,6 @@
       "mcp__gitnexus__shape_check",
       "mcp__gitnexus__tool_map",
       "mcp__gitnexus__detect_changes",
-      "mcp__gitnexus__cypher",
       "mcp__gitnexus__group_list",
       "mcp__gitnexus__group_status",
       "mcp__gitnexus__group_query",
