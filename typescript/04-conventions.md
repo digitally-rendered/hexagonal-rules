@@ -23,3 +23,27 @@
   pre-commit and CI.
 - Env: `VITE_*` for client config; demo/persona switches gated by env, never
   hardcoded.
+
+## Backend (Node) conventions
+
+- ESM only; `moduleResolution: NodeNext`; strict flags including
+  `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`,
+  `verbatimModuleSyntax`; project references; one `index.ts` per package
+  with an `exports` map carrying `types`.
+- No default exports in core packages; named exports only.
+- Naming: `<name>.repository.ts` exporting `<Pascal>Repository`,
+  `<name>.service.ts`, `<name>.handlers.ts`; ports are interfaces named
+  for the capability; adapters carry the technology.
+- Errors wrap with `cause`; typed error classes with a closed `code` union;
+  never throw strings.
+- `AbortSignal` is first-class on every async boundary (requests, plugins,
+  model calls).
+- Structured logging (pino) through a logger port; never `console` in
+  library code.
+- Env overrides use one framework prefix; config is validated once at
+  startup by a schema the framework owns.
+- Dynamic `import()` only in composition roots and optional-dependency
+  probes, each commented.
+- Tooling: ESLint flat config with type-checked rules, boundaries plugin,
+  Prettier, knip for unused exports, dependency-cruiser, changesets for
+  releases, husky + lint-staged for pre-commit.

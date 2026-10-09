@@ -12,8 +12,8 @@ emphatically does not make it hold.
 
 | Rung | Mechanism | Example |
 |---|---|---|
-| 1. Impossible to express | type system / API surface | repository facade with no `.find()`; Go interfaces; generated endpoints that cannot skip ownership scoping |
-| 2. Authoring-time lint | pylint/ESLint plugin, `golangci-lint` | project rules for raw reads, in-place mutation, adapter cross-imports; `errcheck`, `unused` |
+| 1. Impossible to express | type system / API surface | repository facade with no `.find()`; Go interfaces and package levels; a TypeScript monorepo whose package dependency graph is the layer graph; generated endpoints that cannot skip ownership scoping |
+| 2. Authoring-time lint | pylint/ESLint plugin, `eslint-plugin-boundaries`, `no-restricted-imports`, `dependency-cruiser`, `depguard`, `golangci-lint` | project rules for raw reads, in-place mutation, adapter cross-imports; `errcheck`, `unused` |
 | 3. Pre-commit | changed files only, before the commit exists | ruff/black/mypy/tsc/codegen:check |
 | 4. CI ratchet | counts may fall, never rise | an architecture-drift script versus a committed baseline |
 

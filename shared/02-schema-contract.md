@@ -46,6 +46,9 @@ the edges; its rules are in `python/01-ddd-ports-adapters.md`.
 
 - `type` MUST be `object`. `title` and `version` SHOULD be present (`version`
   defaults to `1.0.0`).
+- Two file shapes are accepted by a conforming loader: the **envelope**
+  (`{name, version, schema, …}`) and the **bare schema** (`title`/`version`
+  at the root); storage is envelope-only.
 - `required` lists create-time requirements for domain fields only.
 - Reserved audit fields (below) MAY appear in `properties` for documentation
   and are ignored for input models. Listing them in `required` has no effect.
@@ -106,9 +109,15 @@ test over every schema, and a line in this table.
   `X-Schema-Version` header; the request context carries it.
 - Versions are semver. Multiple versions of one schema MAY coexist
   (`schemas/pet/1.0.0.json`, `2.0.0.json`); `latest` is the highest.
-- Documents are always **written** at the current version. **Read-time
-  migrations** run when `doc.schema_version != current`; they are registered in
-  one migration registry.
+- Documents are always **written** at the current version, and
+  `schema_version` MUST be written on every row (two reference
+  implementations never wrote it, which made their migration layers fail on
+  every read). **Read-time migrations** run when `doc.schema_version !=
+  current`; they are registered in one migration registry.
+- A request MAY select a version (`X-Schema-Version` or `?version`); the
+  body is validated against **that** version's Create/Update variant and
+  stored at latest after migration; the response is projected to the
+  requested version while keeping audit fields.
 - Widening an enum shared by several schemas changes the content hash of every
   consumer of that enum; expect cache busts (see
   `shared/06-evals-and-verification.md` §7).

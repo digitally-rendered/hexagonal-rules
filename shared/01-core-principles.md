@@ -88,8 +88,9 @@ mapping is the same in every repo:
 | internal | 500 |
 
 - Errors carry field-level details (`field`, `message`, `code`) where relevant.
-- `403` means "exists but not yours"; `404` means "does not exist". Pick one
-  posture per project and keep it.
+- A missing or tombstoned entity is **always** 404 before any hook runs. For
+  an entity that exists but the caller does not own, `403` or `404` is one
+  project-wide posture; pick it once and keep it.
 - Never let a missing column or field surface as a bare attribute error;
   model→domain conversion logs what was expected versus what was present, then
   re-raises.
@@ -114,9 +115,12 @@ post_* hooks       → side effects; MUST NOT abort; failures are logged
 ```
 
 - A **pre** hook may abort the operation with a status code. A **post** hook
-  cannot; raising from a post hook is a bug and surfaces as 500.
-- Global hooks run before schema-specific hooks; within a scope, registration
-  order.
+  cannot: the write is already committed, so a post-hook failure is logged
+  and never changes the response (ladder resolution: the framework rungs
+  win; see `shared/05`).
+- Within **each** pipeline stage, global hooks run before schema-specific
+  hooks, then most-specific scope first, then registration order. The order
+  is per stage, not "all globals across every stage first".
 - A single **request context** object carries the operation, schema name,
   entity id, hydrated entity, parsed input, current user, result, pagination,
   channel, and an `extras` bag between hooks. It *is* the command.

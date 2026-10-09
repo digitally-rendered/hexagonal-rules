@@ -21,7 +21,18 @@ built on them. The classical SQL rung uses `is_deleted` soft-delete and a
   Under append-only, an unauthorized write is not rolled back; it is a
   permanent extra version.
 - A compound unique index on `(entity_id, record_version)` is created on every
-  startup (`EnsureIndexes` / `ensure_indexes`, idempotent).
+  startup (`EnsureIndexes` / `ensure_indexes`, idempotent). **That index is the
+  optimistic lock**: every update or delete inserts `record_version + 1` and a
+  duplicate key is a `CONFLICT`; `If-Match` adds a 412 check before the write
+  but is not the only guard.
+- **Latest-active before filter.** `list` selects the latest version per
+  entity and drops tombstones **before** applying the user filter; filtering
+  first resurrects superseded versions. A contract test named for this case
+  (v1 status=a, v2 status=b, v3 tombstone → filter status=a returns nothing)
+  runs against every adapter.
+- User-declared unique indexes apply to **latest-active rows only** (partial
+  index plus an application-level check); an index spanning every version
+  row makes the first update conflict with itself.
 - Reads always return a typed document model; raw dicts never leave the
   repository.
 
@@ -74,9 +85,10 @@ generated path produced none. Hence:
 
 ## 6. UUID storage (Mongo)
 
-- UUIDs are stored as BSON Binary with a fixed representation; the base
-  document normalises Binary/str/UUID on read by field-name convention
-  (`id`, `_id`, `entity_id`, `*_id`, `*_ids` are UUIDs; `*_by` stay strings).
+- UUIDs are stored either as BSON Binary with a fixed representation or as
+  strings (v7); one choice per project. The base document normalises
+  Binary/str/UUID on read by field-name convention (`id`, `_id`,
+  `entity_id`, `*_id`, `*_ids` are UUIDs; `*_by` stay strings).
 - Mock drivers store UUIDs as strings; tests must not assert on the raw
   representation.
 

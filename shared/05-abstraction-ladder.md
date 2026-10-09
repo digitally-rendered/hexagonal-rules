@@ -56,6 +56,16 @@ an MCP server, and reusable schemathesis checks for the hex invariants.
 
 Rules: `python/02-schema-driven-framework.md` (library sections).
 
+### Level 3.5 — Typed library with package-level boundaries ([Syntact](https://github.com/digitally-rendered/Syntact), TypeScript)
+
+Level 3 in a language where the workspace package graph is the layer graph:
+one package per hex level, a transport-neutral driving layer with thin
+framework bindings and a drift test between them, one executor for every
+channel, optimistic concurrency by construction, and a shipped
+schema-driven testing toolkit. In flight.
+
+Rules: `typescript/06`–`08`.
+
 ### Level 4 — Compiled framework ([stellar-drive](https://github.com/digitally-rendered/stellar-drive), Go)
 
 The same model where the compiler enforces the dependency rule, package build
@@ -124,3 +134,9 @@ rules are identical across the mix.
 | Persistence of deletes | `is_deleted` flag, in-place update | tombstone version | tombstone when an audit trail is required |
 | Case conversion at the API edge | axios-case-converter middleware | generated per-schema mappers, no middleware | generated mappers when a codegen exists; middleware otherwise |
 | Line length | 100 | 88 | per repo; never mixed |
+| Hook order across stages | — | some rungs ran all global hooks before any schema-specific hook | global-before-specific **within each stage** (`shared/01` §6) |
+| Post-hook failure | — | one rung surfaced it as 500 | logged, response unchanged: the write is committed (`shared/01` §6) |
+| Custom validators vs schema validation | — | one rung ran custom validators before schema validation | schema validation first, then guards, then custom validators |
+| ETag source | — | header, body hash, and id:version schemes coexisted | one function over the result object (`entity_id:record_version`) |
+| Operator spelling | — | `_startswith` vs `_starts_with` | `_startswith` canonical; the alias accepted and normalised at parse |
+| UUID storage in Mongo | BSON Binary | strings (v7) | one per project; normalisation rule in `shared/03` §6 |

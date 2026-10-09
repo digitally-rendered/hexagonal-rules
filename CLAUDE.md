@@ -6,8 +6,9 @@ application code.
 ## Sources
 
 The rules were distilled from the public frameworks
-[slip-stream](https://github.com/digitally-rendered/slip-stream) and [stellar-drive](https://github.com/digitally-rendered/stellar-drive) and from several private
-applications and a private knowledge workspace. **Only the two public
+[slip-stream](https://github.com/digitally-rendered/slip-stream), [stellar-drive](https://github.com/digitally-rendered/stellar-drive) and
+[Syntact](https://github.com/digitally-rendered/Syntact) (TypeScript, in flight) and from several private
+applications and a private knowledge workspace. **Only the three public
 frameworks may be named in these files.** Private sources are described by
 role (a classical DDD application, a schema-driven application, a
 plugin-pipeline application, a personal knowledge workspace), never by

@@ -14,6 +14,7 @@ applications built on the same architecture.
 |---|---|---|
 | [slip-stream](https://github.com/digitally-rendered/slip-stream) | Python | The schema-driven hexagon as a generic library: registry decorators, `RequestContext`, filters, events, 4-layer container, testing utilities |
 | [stellar-drive](https://github.com/digitally-rendered/stellar-drive) | Go | The same model ported to Go with compile-time enforcement: package levels, function registry with scope specificity, event bus, domain errors, engine composition root |
+| [Syntact](https://github.com/digitally-rendered/Syntact) | TypeScript | The same model in TypeScript (in flight): monorepo package levels as rung-1 enforcement, transport-neutral driving layer, one executor for every channel, CAS-based versioning, the schema-driven testing toolkit, benchmark ratchet |
 | a classical DDD application | Python + React/TS | Explicit DDD + Ports & Adapters (entities, value objects, aggregates, use cases, ports), React hexagonal rules, authorization and test-tier discipline |
 | a plugin-pipeline application | Python | Plugin-ensemble hexagon, provenance chains, content-addressed stage cache, the vet/judge layer, eval methodology, enforcement learnings |
 | a schema-driven application | Python + React/TS | The three-tier decision rule, the enforcement ratchet, override policy, frontend codegen and data hooks |
@@ -54,15 +55,34 @@ typescript/  React + TypeScript rules
   03-testing.md
   04-conventions.md
 
-go/          Go rules (stellar-drive)
-  01-go-hexagonal.md           package levels, ports, container, registry, events, errors, engine
+go/          Go rules
+  01-go-hexagonal.md           the schema-driven framework: package levels, ports, container, registry, events, errors, engine
   02-conventions.md
   03-testing.md
+  04-ddd-ports-adapters.md     the classical hexagon in Go
+  05-pipeline-and-ai-harness.md plugin ensemble, ingestion lifecycle and AI harness in Go
+  06-privacy-implementation.md the eight privacy layers in Go
 
 second-brain/  personal knowledge-system project design
   01-project-design.md         three folders, read-only sources, fixed schema, audience vaults, fact registry, review cycle
   02-requirements-and-design.md  how research/business inputs, facts and decisions feed the spec system
 ```
+
+## Coverage matrix
+
+Every design exists in every language. `shared/` holds the language-agnostic
+rules; the cells name the per-language idiom file.
+
+| Design | Python | TypeScript | Go |
+|---|---|---|---|
+| Classical DDD + Ports & Adapters | `python/01` | `typescript/09` | `go/04` |
+| Schema-driven framework | `python/02` | `typescript/06` | `go/01` |
+| Plugin ensemble, ingestion lifecycle, AI harness | `python/03` | `typescript/10` | `go/05` |
+| Privacy layering implementation | `python/02` §14 + `shared/08` | `typescript/11` | `go/06` |
+| Testing | `python/04` | `typescript/03`, `typescript/07` | `go/03` |
+| Performance | `shared/06` §8 | `typescript/08` | `go/03` benchmarks |
+| Conventions | `python/05` | `typescript/04` | `go/02` |
+| Frontend hexagon | — | `typescript/01`–`05` | — |
 
 ## Rule strength vocabulary
 
@@ -85,3 +105,6 @@ enforces it. See `shared/04-enforcement.md`.
 3. Write the enforcement checks before stating the rules locally: an AST-based
    fitness test for the import rules, and a ratchet baseline for existing debt.
 4. Record any Class B overrides in an allowlist with a reason per entry.
+5. For a schema-driven TypeScript service, add the framework's testing
+   package as a dev dependency and run its contract suites against your
+   adapters.
