@@ -74,9 +74,9 @@ go/          Go rules
 second-brain/  personal knowledge-system project design
   01-project-design.md         three folders, read-only sources, fixed schema, audience vaults, fact registry, review cycle
   02-requirements-and-design.md  how research/business inputs, facts and decisions feed the spec system
-```
 
 templates/   files a project copies in: MCP server entries, hooks, permissions, the managed CLAUDE.md block
+```
 
 ## Coverage matrix
 
