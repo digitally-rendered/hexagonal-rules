@@ -49,11 +49,18 @@ python/      Python rules (FastAPI, Pydantic, Motor/SQLAlchemy, Poetry)
   04-testing.md
   05-conventions.md
 
-typescript/  React + TypeScript rules
+typescript/  TypeScript rules: frontend (01–05) and Node backend (06–11)
   01-react-hexagonal.md        domain components, application hooks, ports, adapters
   02-generated-layer.md        codegen from backend schemas, data hooks, case convention
-  03-testing.md
-  04-conventions.md
+  03-testing.md                frontend testing
+  04-conventions.md            frontend and backend conventions
+  05-ui-platform-rules.md      services provider, error presentation, accessibility, regulated wording, roles, mobile/PWA, i18n, embedded apps
+  06-schema-driven-framework.md package levels, core contracts, registry/container/executor, validation lifecycle, driving layer, engine
+  07-backend-testing.md        vitest projects, contract suites, property and architecture tests, the testing toolkit, fuzz, baselines
+  08-performance.md            micro and load benchmarks, ratchet, compat, fuzz, reporting
+  09-node-ddd-ports-adapters.md the classical hexagon in Node
+  10-node-pipeline-and-ai-harness.md plugin ensemble, ingestion lifecycle and AI harness in Node
+  11-privacy-implementation.md the eight privacy layers in Node
 
 go/          Go rules
   01-go-hexagonal.md           the schema-driven framework: package levels, ports, container, registry, events, errors, engine

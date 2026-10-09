@@ -99,7 +99,9 @@ silently decide a policy question.
 | `x-owner-reason`, `x-collection-reason` | human justification | required with the override they explain |
 
 Add a new extension only with: a registry accessor, a fail-closed parser, a
-test over every schema, and a line in this table.
+test over every schema, and a line in this table. An undeclared `x-*` key
+MUST fail schema registration (`SCHEMA_INVALID`), never warn; consumers
+declare custom extensions in configuration.
 
 ## 7. Schema envelopes and versioning
 
