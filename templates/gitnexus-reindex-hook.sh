@@ -16,6 +16,6 @@ print("yes" if re.search(r"\bgit\s+(commit|merge|checkout|switch|pull|rebase)\b"
 PY
 )"
 if [ "$should_reindex" = "yes" ]; then
-  npx gitnexus analyze >/dev/null 2>&1 || true
+  command -v gitnexus >/dev/null 2>&1 && gitnexus analyze >/dev/null 2>&1 || true
 fi
 exit 0

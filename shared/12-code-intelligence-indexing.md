@@ -22,8 +22,8 @@ installed; both expose read-only MCP tools.
 
 ## 2. Setup per project
 
-1. **Install once per machine**: GitNexus as a global binary or via
-   `npx gitnexus`; register it as a user-scope MCP server
+1. **Install once per machine**: GitNexus as a global binary (pin the
+   version); register it as a user-scope MCP server
    (`templates/mcp-servers.json`). Projects do not add it to their own
    `.mcp.json`; the global registry (`~/.gitnexus/registry.json`) routes
    requests by repo.
@@ -38,11 +38,14 @@ installed; both expose read-only MCP tools.
    switch, pull, rebase). The script parses the tool call as JSON on stdin
    and never evaluates the command text (`templates/settings-hooks.json`,
    `templates/gitnexus-reindex-hook.sh`).
-5. **Allow the commands**: project settings pre-approve the exact
-   `npx gitnexus status|analyze|list` commands and the read-only
-   `mcp__gitnexus__*` tools (`templates/settings-permissions.json`). No
-   wildcard after `npx` (its flags can run arbitrary commands behind an
-   allowed prefix); `cypher`, `rename` and `group_sync` stay prompted.
+5. **Allow the commands**: project settings pre-approve the locally
+   installed `gitnexus status|analyze|list` binary with exact subcommands
+   and the read-only single-repo tools (`templates/settings-permissions.json`).
+   Not `npx` (it can fetch and run a registry package when no binary is
+   present), no wildcards, and `cypher`, `rename`, `group_sync` and the
+   `group_*` readers stay prompted; the group readers see every repo in the
+   machine-wide registry, so pre-approve them only in a repo that owns a
+   group whose every member may be exposed to the session.
 6. **Add the skills**: copy the `gitnexus-*` skill family and
    `reindex-check` (`shared/11` §1) into `.claude/skills/`.
 7. **Document index**: register the project's read-only text-index MCP

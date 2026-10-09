@@ -1,11 +1,10 @@
 {
-  "$comment": "Project .claude/settings.json fragment: allow exact indexing commands and read-only tools without prompts. No wildcard after npx (npx accepts flags such as --call that run arbitrary commands behind an allowed prefix). cypher, rename and group_sync are deliberately not pre-approved: cypher runs free-form graph queries, the other two write.",
+  "$comment": "Project .claude/settings.json fragment. Pre-approves only the locally installed gitnexus binary with exact subcommands (not npx, which can fetch and run a registry package when no binary is present) and the read-only single-repo tools. Not pre-approved, so they still prompt: cypher (free-form queries), rename and group_sync (they write), and the group_* readers (they read every repo in the machine-wide registry, not only this project). Add the group readers only in a repo that owns a group whose every member may be exposed to the session.",
   "permissions": {
     "allow": [
-      "Bash(npx gitnexus status)",
-      "Bash(npx gitnexus analyze)",
-      "Bash(npx gitnexus analyze --embeddings)",
-      "Bash(npx gitnexus list)",
+      "Bash(gitnexus status)",
+      "Bash(gitnexus analyze)",
+      "Bash(gitnexus list)",
       "mcp__gitnexus__list_repos",
       "mcp__gitnexus__query",
       "mcp__gitnexus__context",
@@ -14,11 +13,7 @@
       "mcp__gitnexus__route_map",
       "mcp__gitnexus__shape_check",
       "mcp__gitnexus__tool_map",
-      "mcp__gitnexus__detect_changes",
-      "mcp__gitnexus__group_list",
-      "mcp__gitnexus__group_status",
-      "mcp__gitnexus__group_query",
-      "mcp__gitnexus__group_contracts"
+      "mcp__gitnexus__detect_changes"
     ]
   }
 }
