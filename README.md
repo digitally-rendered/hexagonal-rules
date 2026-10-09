@@ -37,6 +37,9 @@ shared/      language-agnostic invariants every repo obeys
   06-evals-and-verification.md generated-output verification: judges, provenance, gates, dev loop
   07-vertical-slice-build-and-test.md  schema → persistence → core → API → generated contract → UI → E2E, with the test at each layer
   08-data-privacy-layering.md  storage tiers, classification, audience/privilege, ownership, ReBAC, OBO, consent, encryption, audit
+  09-ingestion-lifecycle.md    corpus → package: stages, scope and build plan, caching, extraction, cascade, versioning, provenance, proposals, consumer verbs, process controls
+  10-ai-harness.md             LLM port and backends, model tiers, prompt versioning and layout, structured output, caching and provenance, judges
+  11-operating-skills.md       the skill set that drives a pipeline: cycle driver, progress reporter, audits, skill contract
 
 python/      Python rules (FastAPI, Pydantic, Motor/SQLAlchemy, Poetry)
   01-ddd-ports-adapters.md     the classical hexagon (entities, value objects, aggregates, use cases, ports, adapters)

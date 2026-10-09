@@ -1,6 +1,9 @@
 # Plugin ensembles, pipelines, and LLM adapters (Python)
 
-Source: a pipeline application. Level 1 of the ladder: a hand-written hexagon whose
+Source: a pipeline application. The abstract lifecycle and harness are in
+`shared/09-ingestion-lifecycle.md`, `shared/10-ai-harness.md` and
+`shared/11-operating-skills.md`; this file is the Python idiom. Level 1 of
+the ladder: a hand-written hexagon whose
 variable behaviour is plugins, whose long work is a cached pipeline, and whose
 output is vetted by an independent judge layer
 (`shared/06-evals-and-verification.md`).
