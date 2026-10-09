@@ -42,7 +42,7 @@ shared/      language-agnostic invariants every repo obeys
   10-ai-harness.md             LLM port and backends, model tiers, prompt versioning and layout, structured output, caching and provenance, judges
   11-operating-skills.md       the skill set that drives a pipeline: cycle driver, progress reporter, audits, skill contract
   12-code-intelligence-indexing.md GitNexus code graph and the document index as MCP tools: setup, freshness, impact gates, groups, branches
-  13-generated-agent-surface.md one schema → human UI + application MCP server: generated tools/resources/prompts, agent as principal, human–agent patterns, parity and live-client tests
+  13-generated-agent-surface.md one schema → backend + SDK + application MCP server (+ UI types and hooks): generated tools/resources/prompts, agent as principal, human–agent patterns, parity and live-client tests, what each stack generates today
 
 python/      Python rules (FastAPI, Pydantic, Motor/SQLAlchemy, Poetry)
   01-ddd-ports-adapters.md     the classical hexagon (entities, value objects, aggregates, use cases, ports, adapters)

@@ -1,9 +1,9 @@
 # The generated agent surface: one schema, a human UI and a working MCP server
 
 The point of the generative stack is not a REST API with a UI bolted on. It
-is that one schema and one set of use cases generate **two complete
-surfaces** for the same feature: a human surface (pages, forms, views) and
-an agent surface (an MCP server whose tools, resources and prompts an agent
+is that one schema and one set of use cases generate **two surfaces** for the
+same feature: a human surface (generated types, validators and data hooks
+under hand-written screens) and an agent surface (an MCP server whose tools, resources and prompts an agent
 can call), so that a person and an agent can work on the same records
 through the same core with the same authorization and the same audit. A
 feature is not done until both surfaces exist and are tested, and the
@@ -29,16 +29,44 @@ REST and the UI do. Nothing in either reaches persistence directly.
 
 ## 2. What is generated, from what
 
-| Schema input | REST (existing) | Human UI (existing) | Agent surface (generated) |
+| Schema input | REST, SDK (generated) | Human UI (generated types and hooks; screens hand-written, see §2a) | Agent surface (generated) |
 |---|---|---|---|
-| entity schema | CRUD routes, bulk, history | list, detail, create and edit forms | `<entity>_get`, `<entity>_list`, `<entity>_create`, `<entity>_update`, `<entity>_delete`, `<entity>_history`; a resource `<entity>://{id}` and `<entity>://` templates |
-| view schema | read route | table or dashboard | `<view>_query` with the view's filters as typed arguments; a resource per view |
-| Tier 3 use case (registered operation) | custom route | action button, wizard | one tool per use case, name from the registry; `simulate_<use_case>` sibling for mutations |
-| `x-*` reasons on fields | OpenAPI descriptions | form help text | tool and argument descriptions: the agent reads the same reasons the human does |
-| `required`, enums, formats | validation | field constraints | the tool's input JSON Schema is the Create/Update schema itself; no second hand-written schema |
+| entity schema | CRUD routes, bulk, history, typed client | `types.ts`, `schemas.ts` (zod), `useEntity`/`useEntityList`; list, detail and forms written over them | `<entity>_get`, `<entity>_list`, `<entity>_create`, `<entity>_update`, `<entity>_delete`, `<entity>_history`; a resource `<entity>://{id}` and `<entity>://` templates |
+| view schema | read route | `views.ts` descriptor and `useView`; the table itself written over them | `<view>_query` with the view's filters as typed arguments; a resource per view |
+| Tier 3 use case (registered operation) | custom route; `apiTypes.ts` from OpenAPI | action button or wizard, hand-written over the generated API types | one tool per use case, name from the registry; `simulate_<use_case>` sibling for mutations |
+| `x-*` reasons on fields | OpenAPI descriptions | available to form help text through the generated schema | tool and argument descriptions: the agent reads the same reasons the human does |
+| `required`, enums, formats | validation | zod constraints in `schemas.ts` | the tool's input JSON Schema is the Create/Update schema itself; no second hand-written schema |
 | errors table (`shared/01`) | status codes | error presentation | typed MCP errors with the same codes; `isError` results carry the domain error, never a stack |
-| workflows (`specs/04` tasks, `shared/11` skills) | none | guided pages | MCP prompts: one per workflow, parameterised, pointing at the tools it uses |
-| events (`shared/01`) | webhooks | live updates | notifications or a `<entity>_changes` resource with a cursor |
+| workflows (`specs/04` tasks, `shared/11` skills) | none | guided pages, hand-written | MCP prompts: one per workflow, parameterised, pointing at the tools it uses |
+| events (`shared/01`) | webhooks | live updates, hand-written subscriptions | notifications or a `<entity>_changes` resource with a cursor |
+
+### 2a. What generates today, per stack, and where the UI stops
+
+| Stack | Backend from schema | SDK | MCP | UI |
+|---|---|---|---|---|
+| Python ([slip-stream](https://github.com/digitally-rendered/slip-stream)) | models, routers, services, repositories | generated typed client | server module with tests and benchmarks | none in the framework; the schema-driven application ships a script that emits `types.ts`, `schemas.ts`, `views.ts` and `apiTypes.ts` from the schemas and the live OpenAPI document |
+| Go ([stellar-drive](https://github.com/digitally-rendered/stellar-drive)) | structs, repositories, services, handlers, GraphQL, overrides, OpenAPI | generated client | stdio server | none |
+| TypeScript ([Syntact](https://github.com/digitally-rendered/Syntact), in flight) | planned at parity with the Go port | planned | planned (`mcp` CLI and package) | not in the plan |
+
+So the generative stack today is **backend + SDK + MCP from one schema**;
+the human UI is generated only down to types, validators, view descriptors
+and generic data hooks. Screens are Tier 3: written by hand over the
+generated layer (`typescript/02`). Rules that follow from this:
+
+- **Say which it is.** A rule or spec that calls the UI "generated" means
+  the generated layer, never pages or forms, until a renderer exists.
+- **The agent surface is the primary generated surface for a feature.** It
+  is complete from the schema with no hand-written step, so it is the
+  first surface a feature has, and the parity test runs against it before
+  any screen exists. A feature usable by an agent and not yet by a human is
+  an honest intermediate state; the reverse is not allowed.
+- **The target** is a schema-form renderer that turns the Create/Update
+  schema, the view descriptor and the `x-*` reasons into default list,
+  detail and form screens, with hand-written screens as overrides preserved
+  on re-run, exactly as backend override stubs are. That is a design
+  decision for the frontend rules, not a fact about the current frameworks;
+  until it ships, the `codegen:check` contract covers types, hooks, SDK and
+  MCP only.
 
 Rules:
 
