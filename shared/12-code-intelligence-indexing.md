@@ -33,11 +33,14 @@ installed; both expose read-only MCP tools.
    block in `CLAUDE.md` / `AGENTS.md`.
 3. **Ignore the index**: `.gitnexus/` is in `.gitignore`; it is derived and
    rebuildable.
-4. **Keep it fresh automatically**: a `PostToolUse` hook script re-runs
-   `analyze` after git commands that move `HEAD` (commit, merge, checkout,
-   switch, pull, rebase). The script parses the tool call as JSON on stdin
-   and never evaluates the command text (`templates/settings-hooks.json`,
-   `templates/gitnexus-reindex-hook.sh`).
+4. **Keep it fresh automatically**: a **user-scope** `PostToolUse` hook
+   re-runs `analyze` after git commands that move `HEAD` (commit, merge,
+   checkout, switch, pull, rebase). The hook script lives in
+   `~/.claude/hooks/`, outside any repository, because a project-scope hook
+   is code that repository contributors control and that runs in every
+   session; it parses the tool call as JSON on stdin with Python in isolated
+   mode and never evaluates the command text
+   (`templates/settings-hooks.json`, `templates/gitnexus-reindex-hook.sh`).
 5. **Allow the commands**: project settings pre-approve the locally
    installed `gitnexus status|analyze|list` binary with exact subcommands
    and the read-only single-repo tools (`templates/settings-permissions.json`).
@@ -157,5 +160,5 @@ the Always/Never rules below and the resource and skill tables
 | impact before symbol edit, detect_changes before commit | stated in the managed block; the review agent checks the handoff summary names the impact report |
 | no notes inside the managed block | a test greps for non-generated lines between the markers |
 | `.gitnexus/` ignored | `.gitignore` entry checked by the repo scaffold |
-| hooks present | project `settings.json` contains the post-commit analyze hook |
+| hook present | user-scope `settings.json` contains the reindex hook pointing at `~/.claude/hooks/`; no project settings file defines a hook |
 | document index read-only | MCP server env opens the database `mode=ro`; a test asserts the server has no write tools |

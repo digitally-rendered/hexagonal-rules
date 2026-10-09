@@ -1,5 +1,5 @@
 {
-  "$comment": "Project .claude/settings.json fragment: keep the GitNexus index on HEAD after git commands that move it. The hook is a committed script (templates/gitnexus-reindex-hook.sh copied to .claude/hooks/) that reads the tool call as JSON on stdin and never evaluates the command text. analyze preserves embeddings if previously generated.",
+  "$comment": "USER-scope ~/.claude/settings.json fragment (not a project settings file). Keeps the GitNexus index on HEAD after git commands that move it. The hook body lives at ~/.claude/hooks/gitnexus-reindex-hook.sh, outside any repository, so repository contributors cannot change what runs in your session; it reads the tool call as JSON on stdin and never evaluates command text. Project-scope hooks are repo-controlled code and are not used for this.",
   "hooks": {
     "PostToolUse": [
       {
@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/gitnexus-reindex-hook.sh"
+            "command": "$HOME/.claude/hooks/gitnexus-reindex-hook.sh"
           }
         ]
       }
