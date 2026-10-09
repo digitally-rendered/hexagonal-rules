@@ -173,10 +173,10 @@ archive and a failure stops the cycle for that source.
   re-typed text. Anatomy: full header block (as sent and in UTC, message and reply
   ids); a provenance box (source hash, archive object, custody sequence and
   entry hash); the body; an attachments table with hashes and renderable
-  attachments appended; a footer on every page (Bates number, exhibit label,
+  attachments appended; a footer on every page (sequence number, set label,
   page x of y, source hash); the original embedded as a file attachment; a
   sidecar manifest (source hashes, custody entry, renderer and browser
-  versions, artifact hash). Sequential page or item numbers (Bates-style)
+  versions, artifact hash). Sequential page or item numbers
   continue across a set from the previous manifest.
 - A verifier checks embedded source ↔ file metadata ↔ manifest ↔ bytes,
   and can extract the original back out.
