@@ -35,6 +35,7 @@ taxonomy both agent brains share, and the loops between the three.
 | Freshness | stale when code reality diverges | stale when an index lags HEAD or state files lag the work | stale when a fact is superseded, a gate's inputs changed, a source re-ingested |
 | Contains private data | never | never (code and process only) | yes, under the privacy layering |
 | Specified in | `specs/01–05`, `02` | `shared/04`, `shared/06`, `shared/11`, `shared/12`, `specs/05` | `01`, `03`, `04`, `05`, `shared/08`, `shared/09`, `shared/10` |
+| Acts through | review and approval | the developer MCP and the repo tooling | the generated application MCP and the human UI (`shared/13`) |
 
 The design brain is the input to the other two; the build brain produces
 the system; the operation brain is produced by the system running over the
@@ -148,7 +149,7 @@ Rules of the operation brain:
 |---|---|---|
 | design → build | requirements, design decisions, tasks, rules | the build agent obeys; it does not reinterpret the spec |
 | build → design | remediation rows with class and evidence, contradiction reports, learnings | reviewed promotion; status is corrected to match validated reality before gaps become work (`specs/05` §2) |
-| build → operation | releases: code, prompt manifest versions, tier tables, skills, gate configs, schema versions | nothing reaches operation except through a tested release; config carries its version |
+| build → operation | releases: code, the generated application MCP and UI, prompt manifest versions, tier tables, skills, gate configs, schema versions | nothing reaches operation except through a tested release; config carries its version |
 | operation → build | findings with producer layer and rerun command, failure classes, eval results, incident records, performance baselines | land as rows first; become bugs, tests and learnings; never edit the operation brain to make a finding go away |
 | operation → design | growth reports, synonym proposals, usage evidence, requirement change requests | evidence-graded like any other input (`02` §2); the model proposes, a person decides |
 | operation → operation | curation: verdicts, canonical-name merges, binding approvals, tag corrections | by curators within their rights; logged |

@@ -42,6 +42,7 @@ shared/      language-agnostic invariants every repo obeys
   10-ai-harness.md             LLM port and backends, model tiers, prompt versioning and layout, structured output, caching and provenance, judges
   11-operating-skills.md       the skill set that drives a pipeline: cycle driver, progress reporter, audits, skill contract
   12-code-intelligence-indexing.md GitNexus code graph and the document index as MCP tools: setup, freshness, impact gates, groups, branches
+  13-generated-agent-surface.md one schema → human UI + application MCP server: generated tools/resources/prompts, agent as principal, human–agent patterns, parity and live-client tests
 
 python/      Python rules (FastAPI, Pydantic, Motor/SQLAlchemy, Poetry)
   01-ddd-ports-adapters.md     the classical hexagon (entities, value objects, aggregates, use cases, ports, adapters)
@@ -97,6 +98,7 @@ rules; the cells name the per-language idiom file.
 | Performance | `shared/06` §8 | `typescript/08` | `go/03` benchmarks |
 | Conventions | `python/05` | `typescript/04` | `go/02` |
 | Frontend hexagon | — | `typescript/01`–`05` | — |
+| Generated agent surface (application MCP) | `python/02` §17 | `typescript/06` §6 | `go/01` §1 `adapter/driving/mcp` |
 
 ## Rule strength vocabulary
 
@@ -122,6 +124,8 @@ enforces it. See `shared/04-enforcement.md`.
 5. For a schema-driven TypeScript service, add the framework's testing
    package as a dev dependency and run its contract suites against your
    adapters.
+   Generate the application MCP server with the routes and UI types, and
+   add the parity, live-client and agent-eval tests (`shared/13`).
 6. Index the repo with GitNexus, copy the hook, permission and `CLAUDE.md`
    block templates, register the document index read-only, and define a
    group when the product spans repos (`shared/12`).

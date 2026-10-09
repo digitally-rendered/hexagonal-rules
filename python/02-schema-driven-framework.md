@@ -219,6 +219,19 @@ fresh app).
 
 ## 17. MCP and SDK
 
-The framework exposes schemas, queries, and codegen as MCP tools, and generates
-typed clients from schemas. Both are adapters; they read the registry and call
-the public API. Neither reaches into persistence.
+Two MCP servers, both adapters (`shared/13`):
+
+- **Developer MCP** (`<fw> mcp`): schemas, queries, registry inspection and
+  codegen as tools for the coding agent. Never deployed with the application.
+- **Application MCP** (`generate` output, `adapters/driving/mcp/`): one tool
+  per schema operation (`<schema>_<op>`) and per registered Tier 3 use case,
+  a resource per entity and view, a prompt per workflow. Tool input schemas
+  are the registry's Create/Update models (Pydantic → JSON Schema), never
+  hand-written. Each call builds a `RequestContext(channel="mcp")` with the
+  authenticated principal and any on-behalf-of delegation and runs the same
+  pipeline as the router. Mutating tools have `simulate_` siblings; reading
+  tools have `why_` siblings. Served over stdio and streamable HTTP with the
+  official Python SDK; tested with its client fixture in CI.
+
+Typed SDK clients are generated from the same schemas. Nothing in these
+adapters reaches into persistence.

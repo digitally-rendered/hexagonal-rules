@@ -19,7 +19,8 @@ pkg/adapter/driven/  outbound: mongo/, sql/, webhook/, streaming/, policy/, tele
 pkg/engine/          composition root: config → driven adapters → services → driving adapters → serve
 pkg/codegen/         JSON Schema → Go structs, repositories, services, handlers, overrides, OpenAPI, SDK
 pkg/config/          YAML + STELLAR_* env overrides
-pkg/mcp/             MCP server (stdio JSON-RPC)
+pkg/mcp/             developer MCP server (schema, query, codegen tools; not deployed)
+pkg/adapter/driving/mcp/  generated application MCP server: <schema>_<op> and use-case tools, resources, prompts; RequestContext channel=mcp (shared/13)
 pkg/testing/sdtest/  MemoryRepository, TestEngine, DataGenerator, LifecycleRunner, event capture
 internal/            private utilities (stringutil, timeutil, jsonutil, ctxkey); not importable externally
 cmd/                 Cobra commands: run, generate, init, schema, migrate, mcp

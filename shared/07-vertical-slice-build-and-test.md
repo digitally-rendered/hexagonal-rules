@@ -4,7 +4,7 @@ Source: the feature lifecycles, new-entity workflows and verification
 methodology of the application sources; [slip-stream](https://github.com/digitally-rendered/slip-stream) testing
 utilities; pipeline gates. One feature is one **vertical slice** through the
 hexagon. The slice is built bottom-up (schema → persistence → core → API →
-generated contract → frontend → E2E), and each layer carries its own test
+generated contract → agent surface → frontend → E2E), and each layer carries its own test
 that must pass before the next layer is built.
 
 ## 1. The order
@@ -20,6 +20,7 @@ Phase B    Backend, bottom-up
              B5 composition root wiring
 Phase B.5  Registration / migration validation — BLOCKING
 Phase C    Backend tests (unit → integration → contract → security → fuzz)
+Phase M    Agent surface: generated MCP tools, resources, prompts → parity → authorization → live client → agent eval
 Phase D    Frontend, bottom-up: generated types → port → adapter → hook → domain component → page → route
 Phase E    Frontend tests (component + a11y → hook → adapter)
 Phase F    E2E (page objects → happy path → full workflow → errors → a11y → browsers)
@@ -100,6 +101,13 @@ app reaches the handler (this is what catches the "never mounted" class).
 Coverage: 80% (schema-driven app) or 100% on new code (classical). `pytest
 tests/unit tests/integration` is not "the backend passes".
 
+### M — Agent surface (the application MCP server)
+
+Generated from the same registry as the routes and the UI types; see
+`shared/13` §5 for the steps (M1 generate, M2 register, M3 parity, M4
+authorization, M5 live client, M6 agent eval). A feature without its tools
+is half a feature: the agent cannot do what the human can.
+
 ### D — Frontend, bottom-up
 
 | Step | What you write | Test (Phase E) |
@@ -176,7 +184,8 @@ occurs.
 ## 5. The definition of done
 
 All tasks checked; migration or registration validated; defensive conversion
-everywhere; backend unit + integration green with coverage; frontend unit
+everywhere; backend unit + integration green with coverage; application MCP
+generated with parity, live-client and agent-eval tests green; frontend unit
 green with coverage; axe in every component test; builds clean; E2E in every
 browser project with a full-workflow test and a11y check; no hex violations;
 API aligned; lint and types clean on both sides; CI green; progress and

@@ -173,6 +173,18 @@ fail.
 - Schema CRUD routes are a dynamic table looked up per request, so runtime
   schema add/update/delete and hot reload need no remount; custom routes
   mount before schema routes so they cannot be shadowed.
+- `@<fw>/mcp` carries two servers (`shared/13`): the developer server the
+  CLI `mcp` command starts (schema, query, codegen tools; never deployed),
+  and the **application server** `createMcpServer(engine)` generated from
+  the registry: `<schema>_<op>` tools whose input schemas are the registry's
+  Create/Update schemas, one tool per registered Tier 3 operation with a
+  `simulate_` sibling, `why_` siblings on reads, resources per entity and
+  view, prompts per workflow. Each call builds a `RequestContext` with
+  `channel: "mcp"`, the principal and any OBO delegation, and runs
+  `OperationExecutor.run`. `tools/list` is filtered by the policy port.
+  Transports: stdio and streamable HTTP via the official TypeScript SDK; the
+  testing toolkit ships a client fixture and a parity suite over REST, UI
+  types and tools.
 - Response is the `{success, data, error, meta}` envelope with `meta.total`
   and `has_more` always present, or an RFC 7807 body, selected by config;
   both are produced by one module.
