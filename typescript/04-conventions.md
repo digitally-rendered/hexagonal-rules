@@ -9,7 +9,9 @@
   directory.
 - Lazy routes (`React.lazy` + dynamic `import()`), one `Suspense` boundary per
   route group.
-- Component library: MUI (pin the major; v7 ≠ v5 APIs). Style with `sx` and
+- Component library: MUI (pin the major; v7 ≠ v5 APIs), reached by generated
+  code only through the component registry (`typescript/12` §3–4); theme in
+  CSS-variables mode generated from tokens (`typescript/13`). Style with `sx` and
   utility classes; no `makeStyles`/`styled` for layout. Never mix two
   component libraries inside one component; shadcn-style primitives live under
   `domain/components/ui/`.

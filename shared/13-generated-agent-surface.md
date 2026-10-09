@@ -63,8 +63,9 @@ generated layer (`typescript/02`). Rules that follow from this:
 - **The target** is a schema-form renderer that turns the Create/Update
   schema, the view descriptor and the `x-*` reasons into default list,
   detail and form screens, with hand-written screens as overrides preserved
-  on re-run, exactly as backend override stubs are. That is a design
-  decision for the frontend rules, not a fact about the current frameworks;
+  on re-run, exactly as backend override stubs are. That target is
+  specified as the frontend track in `typescript/12`, with its design system
+  in `typescript/13`; it is a design, not a fact about the current frameworks;
   until it ships, the `codegen:check` contract covers types, hooks, SDK and
   MCP only.
 
@@ -144,7 +145,7 @@ live client test per feature, and an agent eval per workflow prompt.
 | Concern | Check |
 |---|---|
 | drift | `codegen:check` covers tools, resources and prompts |
-| parity | one test per registered operation across REST, UI types, MCP |
+| parity | one test per registered operation across REST, UI types, MCP, and generated screens once the frontend track is in use (`typescript/12` §6) |
 | no hand-written tool schema | lint: tool input schemas reference registry schemas by id |
 | scoped tool list | `tools/list` differs by principal exactly as the UI's capability set does |
 | OBO audit | delegated calls carry both actors; a missing delegation fails closed |

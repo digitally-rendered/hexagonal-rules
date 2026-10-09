@@ -26,6 +26,9 @@ tracked but not gated).
 
 - Tier 1/2 stay file-derived: no app import, safe in pre-commit, and view
   descriptors (`roles`, `filterParams`, limits) have no OpenAPI representation.
+  Once the backend emits `x-view` and the other extensions into the document
+  (`shared/02` §6a), the split collapses to one spec-derived source; that is
+  the input model of the frontend track (`typescript/12`).
 - Tier 3 is spec-derived because hand-written endpoints have no schema file;
   before this there was zero cascade from a changed response model.
 - Name collisions are **renamed, never merged**: controller-qualified names for

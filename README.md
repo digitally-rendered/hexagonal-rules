@@ -51,7 +51,7 @@ python/      Python rules (FastAPI, Pydantic, Motor/SQLAlchemy, Poetry)
   04-testing.md
   05-conventions.md
 
-typescript/  TypeScript rules: frontend (01–05) and Node backend (06–11)
+typescript/  TypeScript rules: frontend (01–05, 12–13) and Node backend (06–11)
   01-react-hexagonal.md        domain components, application hooks, ports, adapters
   02-generated-layer.md        codegen from backend schemas, data hooks, case convention
   03-testing.md                frontend testing
@@ -63,6 +63,8 @@ typescript/  TypeScript rules: frontend (01–05) and Node backend (06–11)
   09-node-ddd-ports-adapters.md the classical hexagon in Node
   10-node-pipeline-and-ai-harness.md plugin ensemble, ingestion lifecycle and AI harness in Node
   11-privacy-implementation.md the eight privacy layers in Node
+  12-generated-frontend.md     the frontend track: whole default screens from the OpenAPI document, component registry with specificity overrides, renderer decision (MUI), parity with REST and MCP
+  13-design-system-and-figma.md the design system as a hexagon: tokens, schema→component contract, Figma as adapter, the design MCP server as a build tool, design skills
 
 go/          Go rules
   01-go-hexagonal.md           the schema-driven framework: package levels, ports, container, registry, events, errors, engine
@@ -99,6 +101,8 @@ rules; the cells name the per-language idiom file.
 | Conventions | `python/05` | `typescript/04` | `go/02` |
 | Frontend hexagon | — | `typescript/01`–`05` | — |
 | Generated agent surface (application MCP) | `python/02` §17 | `typescript/06` §6 | `go/01` §1 `adapter/driving/mcp` |
+| Generated frontend track (screens from OpenAPI) | emits the document (`shared/02` §6a) | `typescript/12` | emits the document (`shared/02` §6a) |
+| Design system and Figma | — | `typescript/13` | — |
 
 ## Rule strength vocabulary
 

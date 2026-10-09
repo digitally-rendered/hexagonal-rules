@@ -98,10 +98,25 @@ silently decide a policy question.
 | `x-owner-field` | field holding the owning user id for ownership scoping | absent = scoped on `created_by` (default deny); string = scoped on that field; `null`/`false` = shared, requires `x-owner-reason`; prefer a Tier 2 view over `null` |
 | `x-owner-reason`, `x-collection-reason` | human justification | required with the override they explain |
 
+| `x-view` | the view descriptor (projection, filters, sort, limits, roles) for a Tier 2 read | lives in the view file; emitted onto the view operation in the OpenAPI document so the frontend generator has one input |
+| `x-ui-widget`, `x-ui-group`, `x-ui-order`, `x-ui-hidden` | presentation hints for generated screens (`typescript/12`) | optional; closed vocabulary per key; never change validation or policy; a hint the generator does not know fails generation |
+
 Add a new extension only with: a registry accessor, a fail-closed parser, a
 test over every schema, and a line in this table. An undeclared `x-*` key
 MUST fail schema registration (`SCHEMA_INVALID`), never warn; consumers
 declare custom extensions in configuration.
+
+### 6a. Extensions survive into the OpenAPI document
+
+Every declared `x-*` key, `x-schema-version`, the capability or role tags
+of an operation, and operation ids equal to the registry's
+`<schema>_<operation>` names MUST be emitted into the generated OpenAPI
+document. The document is the only input of the frontend generator
+(`typescript/12` §1) and the parity test across REST, MCP and screens
+(`shared/13`); a backend that drops an extension on the way to OpenAPI
+breaks a consumer it cannot see. Check: a test loads every schema, builds
+the document in-process, and asserts each extension is present on the
+corresponding operation or component schema.
 
 ## 7. Schema envelopes and versioning
 
