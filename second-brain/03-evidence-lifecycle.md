@@ -2,12 +2,14 @@
 
 `01-project-design.md` describes the workspace and the session cycle. This
 file is the **item-level** lifecycle every piece of collected material goes
-through, and the defensibility rules that make the record usable in front
-of a court, a regulator, an auditor or a counterparty: what proves an item
-is unaltered, how every derived value traces back to an original, and how
-inputs, tools and access are tracked. Source: the collectors, exhibit
-renderer, custody logs, catalogues and skills of a private evidence
-workspace; generalised.
+through, and the provenance rules that let anyone who must check the work
+(a reviewer, an auditor, a regulator, a counterparty, a court) confirm that
+an item is unaltered, that every derived value traces back to an original,
+and that inputs, tools and access are tracked. The rules are the same for a
+research corpus, a product's design record, a finance ledger or a dispute
+file; the dispute file is one **profile** (§14), not the model. Source: the
+collectors, renderers, custody logs, catalogues and skills of a private
+evidence workspace; generalised.
 
 ## 1. The lifecycle
 
@@ -21,7 +23,7 @@ index     → search chunks with citations; the record model; rebuilt non-destru
 search    → count → facet → search → show; every hit cites a locator the original reproduces
 review    → verify each claim for and against the record; label; record what cuts against
 tag       → topics by keyword rule (navigation, never findings); issues and curation by hand
-produce   → exhibits rendered from raw bytes with embedded source and manifest; verify; redact on a copy
+produce   → artifacts rendered from raw bytes with embedded source and manifest; verify; redact on a copy
 retire    → nothing is deleted; superseded items and corrections are new entries that point back
 ```
 
@@ -92,8 +94,8 @@ archive and a failure stops the cycle for that source.
   the platform thread id kept alongside; replies to messages not in the
   archive become a **missing-parents list**, which is the list of things to
   go and find.
-- Platform reports (co-parenting apps, bank statements, court e-filing
-  stamps) are **not re-rendered**: the original file is the evidence; parsed
+- Platform-generated reports and statements (messaging-app exports, bank
+  statements, filing receipts, system audit exports) are **not re-rendered**: the original file is the evidence; parsed
   JSON is a convenience copy and every parsed row carries `report, page,
   line` back into the original.
 - Duplicate copies of one logical message (inbox, sent, export) collapse to
@@ -112,8 +114,8 @@ archive and a failure stops the cycle for that source.
 - **Dates with provenance**: content date (signature, letterhead, filing
   stamp) outranks file-name date outranks file-system or PDF creation time;
   the date's source and precision are recorded and flagged in reports.
-- **Executed versus draft** is catalogued for agreements and orders; a draft
-  shows negotiation history, not terms.
+- **Final versus draft** is catalogued for agreements, decisions and
+  specifications; a draft shows the history of a decision, not the decision.
 - **Sensitive content** (card numbers, identity numbers, protected-party
   details) is flagged in the inventory or provenance and kept unedited in the
   original; redaction happens on produced copies only.
@@ -139,10 +141,11 @@ archive and a failure stops the cycle for that source.
   found), and corrected early and visibly. "Not found" names the sources
   and queries tried; an exhausted search trail is itself evidence of
   absence.
-- Weight: contemporaneous record > later recollection > hearsay; a party's
-  own sworn or written words > their advisor's submissions.
-- Professional reports are recorded as written (author, credentials, dates,
-  instruments, findings) before any party's description of them is compared.
+- Weight: contemporaneous record > later recollection > second-hand
+  account; a party's own written words > a representative's summary of them.
+- Expert or professional reports are recorded as written (author,
+  credentials, dates, methods, findings) before anyone's description of them
+  is compared.
 - Review outputs are cited rows (date, actor, issue, quote, source, locator,
   label) plus reasoning; one claim per row; ellipses marked.
 - Facts and gaps go to the registries (`01` §5); corrections supersede.
@@ -155,46 +158,48 @@ archive and a failure stops the cycle for that source.
 - **Issues and episodes** come from analysis output and are curated by hand
   (merge, rename, drop, annotate) in a curation file that rebuilds apply
   every time.
-- **Exhibit sets** are declared, not assembled by hand: name, label, date
-  window, subject patterns, excluded participants (the user's own advisors
-  are excluded automatically and counted); preparing an exhibit is not
-  producing it.
+- **Produced sets** (exhibit sets, report appendices, evidence packs,
+  audit samples) are declared, not assembled by hand: name, label, date
+  window, selection patterns, excluded participants (privileged
+  correspondents are excluded automatically and counted); preparing a set
+  is not releasing it.
 - **Trackers** of missing items carry priority, reason and a detect pattern;
   arrival closes the item automatically.
 
 ## 9. Produce
 
-- Exhibits are rendered from **raw bytes**, never from parsed or re-typed
-  text. Anatomy: full header block (as sent and in UTC, message and reply
+- Produced artifacts (exhibits, report appendices, audit evidence,
+  data-room copies) are rendered from **raw bytes**, never from parsed or
+  re-typed text. Anatomy: full header block (as sent and in UTC, message and reply
   ids); a provenance box (source hash, archive object, custody sequence and
   entry hash); the body; an attachments table with hashes and renderable
   attachments appended; a footer on every page (Bates number, exhibit label,
   page x of y, source hash); the original embedded as a file attachment; a
   sidecar manifest (source hashes, custody entry, renderer and browser
-  versions, exhibit hash). Bates numbers continue across exhibits from the
-  previous manifest.
-- `verify-exhibit` checks embedded source ↔ PDF metadata ↔ manifest ↔
-  bytes, and can extract the original back out.
-- Rendering is not byte-reproducible; sources are. A regenerated exhibit
+  versions, artifact hash). Sequential page or item numbers (Bates-style)
+  continue across a set from the previous manifest.
+- A verifier checks embedded source ↔ file metadata ↔ manifest ↔ bytes,
+  and can extract the original back out.
+- Rendering is not byte-reproducible; sources are. A regenerated artifact
   has a new hash and the same source hashes; always produce the manifest.
-- **Redact only on a copy**, keep the unredacted exhibit, remove the embedded
-  original from the redacted copy (it would no longer verify) and say so in
-  the cover note.
+- **Redact only on a copy**, keep the unredacted artifact, remove the
+  embedded original from the redacted copy (it would no longer verify) and
+  say so in the cover note.
 - Bundles for an external consumer are write-once, hashed per part,
   withhold privileged rows by default with counts only, and verify by hash
   (`01` §10).
-- Real exhibits never live under a code repository.
+- Real produced artifacts never live under a code repository.
 
 ## 10. What proves what
 
 | Source | Produced | Proof of integrity |
 |---|---|---|
-| email collected by code | exhibit PDF | raw object hash + custody entry (account, folder, uid, time) + embedded original |
-| email saved by a person | exhibit PDF | hash of the saved file + embedded original; weaker custody (who saved it, when) |
+| email collected by code | rendered artifact | raw object hash + custody entry (account, folder, uid, time) + embedded original |
+| email saved by a person | rendered artifact | hash of the saved file + embedded original; weaker custody (who saved it, when) |
 | platform report | the file as downloaded | platform-generated sequence and receipts; file hash; cited by page and line; the platform's own records are the check |
 | chat exports | the export file | hash + collection notes (device, app version, date); cited by row or pointer |
 | photos, scans, screenshots | the original file | hash, metadata where present, date source and precision flagged |
-| connector-derived index | nothing | index only; cross-check target, never an exhibit |
+| connector-derived index | nothing | index only; cross-check target, never a produced artifact |
 
 ## 11. Tracking inputs, tools and access
 
@@ -213,9 +218,10 @@ archive and a failure stops the cycle for that source.
   is opened through a tool.
 - **People and roles** live in one roster; an unmapped correspondent stays
   unknown and listed; nothing is guessed.
-- **Delegated roles**: the advising professional decides production and
-  disclosure, the client decides what is sent, the reviewer documents and
-  verifies; tools never send, draft, reply or forward.
+- **Delegated roles**: the accountable professional (counsel, auditor,
+  editor, engineering owner) decides what is released; the owner of the
+  record decides what is sent; the reviewer documents and verifies; tools
+  never send, draft, reply or forward.
 
 ## 12. What AI may and may not do here
 
@@ -237,7 +243,26 @@ archive and a failure stops the cycle for that source.
 | nothing written to sources | collectors have no mutating code path; a test asserts the blocked operations |
 | derived reproducibility | rebuild twice, diff manifests |
 | classification | unit tests per role combination; produced sets contain no excluded participants |
-| exhibits | `verify-exhibit` on every produced file; Bates continuity across a set |
+| produced artifacts | the verifier on every produced file; number continuity across a set |
 | registries | facts and gaps append-only; a lint flags conflicting values, quotes absent from source, superseded facts still quoted |
 | missing items | tracker detect patterns run on every ingest |
 | audience scope | the read-only server refuses out-of-scope items for every tool |
+
+## 14. Profiles
+
+The lifecycle is generic; a **profile** names the parties, the privileged
+relationships, the produced-artifact format and the review weights for one
+kind of record. Profiles are configuration (roster roles, classifier
+tables, artifact templates), not code paths.
+
+| Profile | Parties | Privileged relationship | Produced artifacts | Typical review question |
+|---|---|---|---|---|
+| dispute / adversarial | owner, own advisor, other side and their advisors, neutral professionals | advisor–client, mediation | exhibits with embedded originals, disclosure sets | can we prove it, who started it, how long |
+| audit / compliance | the organisation, its auditor, the regulator | auditor working papers | evidence bundles, control mappings | is the control operating, where is the evidence |
+| research | the author, sources, reviewers | none; embargoed sources | citations, data appendices | is the claim supported, by which source, at what date |
+| product / engineering | the team, customers, vendors | legal and security reviews | decision records, release evidence | what did we decide, when, why, what changed since |
+| personal knowledge | the person, correspondents, professionals | advisor–client | notes, summaries | what do I actually know, and from where |
+
+A workspace may run several profiles over one record; the profile decides
+audience labels and review weights, never whether an item is hashed,
+logged or cited.

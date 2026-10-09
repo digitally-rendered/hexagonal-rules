@@ -75,7 +75,8 @@ second-brain/  personal knowledge-system project design
   01-project-design.md         three folders, read-only sources, fixed schema, audience vaults, fact registry, review cycle
   02-requirements-and-design.md  how research/business inputs, facts and decisions feed the spec system
   03-evidence-lifecycle.md     item lifecycle and defensibility: custody chains, manifests, exhibits, provenance, input and access tracking
-  04-topics-issues-and-relationships.md  the content graph: nodes, edges, cardinality, temporal and logical tags, topics, episodes, counting rules
+  04-topics-issues-and-relationships.md  the content graph: nodes, edges, cardinality, temporal and logical tags, topics, episodes, counting rules, profiles
+  05-domain-mapping.md         subject–object extraction, entity resolution, unified domain model, bindings and contracts, convergence, prefill, logic axes
 
 templates/   files a project copies in: MCP server entries, hooks, permissions, the managed CLAUDE.md block
 ```
