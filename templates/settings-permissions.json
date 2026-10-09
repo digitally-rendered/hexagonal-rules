@@ -1,0 +1,22 @@
+{
+  "$comment": "Project .claude/settings.json fragment: allow the indexing commands and the read-only tools without prompts. rename and group_sync are deliberately not pre-approved; they write.",
+  "permissions": {
+    "allow": [
+      "Bash(npx gitnexus *)",
+      "mcp__gitnexus__list_repos",
+      "mcp__gitnexus__query",
+      "mcp__gitnexus__context",
+      "mcp__gitnexus__impact",
+      "mcp__gitnexus__api_impact",
+      "mcp__gitnexus__route_map",
+      "mcp__gitnexus__shape_check",
+      "mcp__gitnexus__tool_map",
+      "mcp__gitnexus__detect_changes",
+      "mcp__gitnexus__cypher",
+      "mcp__gitnexus__group_list",
+      "mcp__gitnexus__group_status",
+      "mcp__gitnexus__group_query",
+      "mcp__gitnexus__group_contracts"
+    ]
+  }
+}

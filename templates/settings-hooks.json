@@ -1,0 +1,16 @@
+{
+  "$comment": "Project .claude/settings.json fragment: keep the GitNexus index on HEAD after commits, merges and checkouts. The hook only runs for git commands that change HEAD; analyze preserves embeddings if previously generated.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c 'case \"$CLAUDE_TOOL_INPUT\" in *\"git commit\"*|*\"git merge\"*|*\"git checkout\"*|*\"git switch\"*|*\"git pull\"*) npx gitnexus analyze >/dev/null 2>&1 || true ;; esac'"
+          }
+        ]
+      }
+    ]
+  }
+}

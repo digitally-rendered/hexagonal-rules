@@ -1,0 +1,20 @@
+{
+  "$comment": "Project-scope .mcp.json: read-only document index servers. DB paths are absolute; the server opens them mode=ro. Register one server per audience when sessions differ in what they may see.",
+  "mcpServers": {
+    "textindex": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["-m", "textindex.mcp_server"],
+      "env": {
+        "PYTHONPATH": "<path-to-code-repo>",
+        "TEXTINDEX_DB": "<path-to-index>/textindex.sqlite"
+      }
+    },
+    "docs-index": {
+      "type": "stdio",
+      "command": "<infigraph-or-equivalent>",
+      "args": ["mcp", "--root", "<path-to-docs>"],
+      "env": {}
+    }
+  }
+}

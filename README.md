@@ -41,6 +41,7 @@ shared/      language-agnostic invariants every repo obeys
   09-ingestion-lifecycle.md    corpus → package: stages, scope and build plan, caching, extraction, cascade, versioning, provenance, proposals, consumer verbs, process controls
   10-ai-harness.md             LLM port and backends, model tiers, prompt versioning and layout, structured output, caching and provenance, judges
   11-operating-skills.md       the skill set that drives a pipeline: cycle driver, progress reporter, audits, skill contract
+  12-code-intelligence-indexing.md GitNexus code graph and the document index as MCP tools: setup, freshness, impact gates, groups, branches
 
 python/      Python rules (FastAPI, Pydantic, Motor/SQLAlchemy, Poetry)
   01-ddd-ports-adapters.md     the classical hexagon (entities, value objects, aggregates, use cases, ports, adapters)
@@ -74,6 +75,8 @@ second-brain/  personal knowledge-system project design
   01-project-design.md         three folders, read-only sources, fixed schema, audience vaults, fact registry, review cycle
   02-requirements-and-design.md  how research/business inputs, facts and decisions feed the spec system
 ```
+
+templates/   files a project copies in: MCP server entries, hooks, permissions, the managed CLAUDE.md block
 
 ## Coverage matrix
 
@@ -115,3 +118,6 @@ enforces it. See `shared/04-enforcement.md`.
 5. For a schema-driven TypeScript service, add the framework's testing
    package as a dev dependency and run its contract suites against your
    adapters.
+6. Index the repo with GitNexus, copy the hook, permission and `CLAUDE.md`
+   block templates, register the document index read-only, and define a
+   group when the product spans repos (`shared/12`).

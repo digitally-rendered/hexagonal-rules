@@ -158,6 +158,11 @@ PR, and the spec is not complete until CI is green.
   100%" is.
 - **Periodic quality pass** after every two or three features: consolidate
   duplicates, align patterns, remove dead code, update docs.
+- **Code-graph gates** (`shared/12`): index fresh at session start and
+  after any branch change; `impact` before editing an existing symbol and
+  `api_impact` before changing a route handler; `detect_changes` in the
+  quality gate before commit; cross-repo `group_contracts` for the API
+  alignment check when backend and frontend are separate repos.
 
 ## 4. Blocking conditions
 

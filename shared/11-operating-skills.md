@@ -18,7 +18,7 @@ in one place. Generalised from the skill set of the pipeline application.
 | Derive | `stage-dag`, `rules-cascade`, `<field>-mapping`, `<interview>-intake`, `<form>-templating` | each deterministic derived artifact and its grounding audit |
 | Drive | `pipeline-cycle` | the self-driving loop: locate the stage, run its skill, check the gate, advance; stop only on a real decision |
 | Report | `pipeline-progress` | where each subject is, which gates passed, what is stale, the exact next command |
-| Hygiene | `reindex-check`, `karpathy-guidelines` | pre-edit index freshness; behavioural guardrails for code changes |
+| Hygiene | `reindex-check`, `gitnexus-{guide,cli,exploring,impact-analysis,debugging,refactoring}`, `karpathy-guidelines` | pre-edit index freshness; the code-graph skill family (`shared/12`); behavioural guardrails for code changes |
 
 Review agents (architecture reviewer, plugin developer and fixer,
 evaluator, package auditor, contract auditor) are the write-capable or

@@ -1,0 +1,11 @@
+{
+  "$comment": "User-scope MCP servers (~/.claude.json → mcpServers). GitNexus is registered once per machine; it routes by repo through ~/.gitnexus/registry.json. The document index is registered per project in that project's .mcp.json (see mcp-project.json).",
+  "mcpServers": {
+    "gitnexus": {
+      "type": "stdio",
+      "command": "gitnexus",
+      "args": ["mcp"],
+      "env": {}
+    }
+  }
+}
