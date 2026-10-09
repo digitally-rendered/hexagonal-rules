@@ -13,7 +13,7 @@ recurring review cycle, all driven by code with AI as proposer, not author.
 | `03-evidence-lifecycle.md` | the item-level lifecycle (ingest → notarize → store → extract → classify → index → search → review → tag → produce) and defensibility: custody chains, manifests, exhibits, what proves what, tracking of inputs, tools and access |
 | `04-topics-issues-and-relationships.md` | the content graph: node and edge types with cardinality, temporal and logical tags, topics and episodes, curation, counting and reasoning across the set, per-domain profiles |
 | `05-domain-mapping.md` | subject–predicate–object extraction, entity resolution and canonical names, the unified domain model, bindings and contracts, convergence and reverse mapping, logic axes, vocabulary growth |
-| `06-design-brain-and-system-brain.md` | the design brain (intent, specs, decisions, learnings) versus the system brain (record, model, procedures, runs, indexes, session memory): memory taxonomy for an agentic system, session handoff, the loop between them, agent read/write policy |
+| `06-design-build-and-operation-brains.md` | the three brains of an agentic project: design (specs, decisions), build (the coding agent's state, indexes, skills, learnings) and operation (the shipped agent's record, model, procedures, runs, users); shared memory taxonomy, the loops between them, agent read/write policy, tests |
 
 Related: `shared/08-data-privacy-layering.md` (audience, privilege, storage
 tiers) and `shared/06-evals-and-verification.md` (verify before use, count

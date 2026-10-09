@@ -77,7 +77,7 @@ second-brain/  personal knowledge-system project design
   03-evidence-lifecycle.md     item lifecycle and defensibility: custody chains, manifests, exhibits, provenance, input and access tracking
   04-topics-issues-and-relationships.md  the content graph: nodes, edges, cardinality, temporal and logical tags, topics, episodes, counting rules, profiles
   05-domain-mapping.md         subject–object extraction, entity resolution, unified domain model, bindings and contracts, convergence, prefill, logic axes
-  06-design-brain-and-system-brain.md  design brain vs system brain for an agentic system: memory taxonomy, handoff, the feedback loop, agent read/write policy
+  06-design-build-and-operation-brains.md  the three brains: design, build (coding agent) and operation (the shipped agent); memory taxonomy, loops, read/write policy
 
 templates/   files a project copies in: MCP server entries, hooks, permissions, the managed CLAUDE.md block
 ```
