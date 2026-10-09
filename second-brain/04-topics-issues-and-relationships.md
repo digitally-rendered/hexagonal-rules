@@ -160,7 +160,7 @@ Counting is where derived analysis earns trust or loses it. Rules:
    classifier version re-tags the whole set before any comparison.
 9. **Queries live with the model.** The record database (SQLite with
    full-text search, optional vectors) answers the questions; note-level
-   tables (Dataview or generated lists) are views of the same rows.
+   tables (live-query plugins or generated lists) are views of the same rows.
    Typical questions: how many requests by each party per month and how
    many were refused; the longest gap between a request and a reply; which
    issues changed hands most; which attachments appear in more than one
