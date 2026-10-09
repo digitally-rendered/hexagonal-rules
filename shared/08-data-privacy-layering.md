@@ -42,7 +42,8 @@ how consent was captured.
 - **Sources are read-only.** Nothing writes back to a mailbox, a chat
   database, or a drive. Originals are write-once by SHA-256 with a hash-chained
   custody log; derived files can be rebuilt; indexes refuse to replace a
-  larger index with a smaller one without an explicit flag.
+  larger index with a smaller one without an explicit flag. The full item
+  lifecycle and the defensibility rules are in `second-brain/03`.
 - **Masking by default**: account numbers to the last four; full card or
   identity numbers flagged in provenance and redacted in any produced copy.
 - **No remote AI on private data unless disclosed.** Embeddings run locally;
