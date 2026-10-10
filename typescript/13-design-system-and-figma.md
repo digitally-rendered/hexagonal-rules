@@ -113,9 +113,9 @@ declares; none has a bypass flag.
 | Concern | Check |
 |---|---|
 | design hexagon | import fitness test: `design/core/**` imports no Figma or renderer package |
-| tokens | schema validation of the tokens JSON; every semantic token has every mode; no primitive token referenced from a component |
-| generated theme | theme file is regenerated and diffed in CI like any generated file; a hand edit fails the drift check (`shared/02` §1) |
-| contract parity | every component key ↔ one Figma component ↔ one renderer; Code Connect mapping regenerated from the contract |
+| tokens | schema validation of the tokens JSON; every semantic token has every mode; no primitive token referenced from a component; untrusted names and values rejected (star-board `packages/tokens/src/schema.test.ts`, `lint.test.ts`, `figma/round-trip.test.ts`) |
+| generated theme | theme file is regenerated and diffed in CI like any generated file; a hand edit fails the drift check (`shared/02` §1); the theme input carries only token variables, never a literal colour (star-board `packages/tokens/src/build.test.ts`, `packages/renderer-mui/src/theme/theme.test.tsx`) |
+| contract parity | every component key ↔ one Figma component ↔ one renderer; Code Connect mapping regenerated from the contract (star-board `packages/tokens/src/figma/code-connect-files.test.ts`, `packages/renderer-mui/src/registerDefaults.test.tsx`) |
 | overrides from design | an override produced by the skill passes the fitness tests and the ratchet, and uses only generated hooks and types |
-| visual | Storybook screenshot baselines per key, mode and state; generated screens included |
-| no data in design tools | the design MCP server is read-only through the permission allowlist fragment `templates/settings-permissions-design.json` (a test parses the fragment and asserts only the server's read tools are allowed), project-scoped and absent from production config; fixtures only, never records |
+| visual | Storybook screenshot baselines per key, mode and state; generated screens included (star-board `packages/storybook`: stories and matrix exist, baseline capture still open) |
+| no data in design tools | the design MCP server is read-only through the permission allowlist fragment `templates/settings-permissions-design.json` (star-board `packages/tokens/src/figma/design-permissions.test.ts` parses its copy and asserts only read tools are allowed), project-scoped and absent from production config; fixtures only, never records |

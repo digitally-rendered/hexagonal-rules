@@ -46,17 +46,18 @@ entry; the fitness test finds no persistence import under either server.
 
 | Stack | Backend from schema | SDK | MCP | UI |
 |---|---|---|---|---|
-| Python ([slip-stream](https://github.com/digitally-rendered/slip-stream)) | models, routers, services, repositories | generated typed client | developer stdio server module with tests and benchmarks; application server: design | none in the framework; the schema-driven application ships a script that emits `types.ts`, `schemas.ts`, `views.ts` and `apiTypes.ts` from the schemas and the live OpenAPI document |
-| Go ([stellar-drive](https://github.com/digitally-rendered/stellar-drive)) | structs, repositories, services, handlers, GraphQL, overrides, OpenAPI | generated client | developer stdio server; application server: design | none |
-| TypeScript ([Syntact](https://github.com/digitally-rendered/Syntact), in flight) | planned at parity with the Go port | planned | planned (`mcp` CLI and package) | not in the plan |
+| Python ([slip-stream](https://github.com/digitally-rendered/slip-stream)) | models, routers, services, repositories | generated typed client | developer stdio server module with tests and benchmarks; application server: design | via star-board from the emitted OpenAPI document once the backend carries the §6a extensions (`shared/02`); the schema-driven application's own script emits types, validators and view descriptors |
+| Go ([stellar-drive](https://github.com/digitally-rendered/stellar-drive)) | structs, repositories, services, handlers, GraphQL, overrides, OpenAPI | generated client | developer stdio server; application server: design | via star-board from the emitted OpenAPI document once the §6a extensions are emitted |
+| TypeScript ([Syntact](https://github.com/digitally-rendered/Syntact), in flight) | planned at parity with the Go port | planned | planned (`mcp` CLI and package) | via star-board from the emitted OpenAPI document |
+| TypeScript/React ([star-board](https://github.com/digitally-rendered/-star-board-)) | consumes the document | generated typed client | consumes the application MCP tool list for parity and the agent affordance | default screens, action hooks, routes, registry, agent panel from the document (`typescript/12`) |
 
 So the generative stack today is **backend + SDK + a developer MCP from one
-schema**; the application MCP server of §1 is a design in every stack; the
-human UI is generated only down to types, validators and view descriptors,
-read through the shared hand-written data hooks. Screens are hand-written
-today (Tier 3 until the track ships; `shared/01` §9) over the generated
-layer (the Level 2 frontend idiom, `shared/05`). Rules that follow from
-this:
+schema**, plus **the human UI from the emitted document** through star-board;
+the application MCP server of §1 is still a design in every backend, so the
+parity suite runs against a tool list fixture until it ships. A backend's UI
+is generated the moment its document carries the `shared/02` §6a extensions;
+`fixtures/petstore.json` in star-board is the hand-authored reference until
+then. Rules that follow from this:
 
 - **Say which it is.** A rule or spec that calls the UI "generated" means
   the generated layer, never pages or forms, until a renderer exists.

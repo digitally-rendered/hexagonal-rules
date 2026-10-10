@@ -20,7 +20,8 @@ the edges; its rules are the Level 0 rung's (`shared/05`).
   |---|---|---|---|
   | Python (Level 3) | a generation script re-run in CI and diffed against the committed output | backend models, routers, SDK client; the application's `types.ts`, `schemas.ts`, `views.ts`, `apiTypes.ts` | default screens, route table, theme |
   | Go (Level 4) | golden-file tests per generator (`-update` regenerates deliberately) | structs, repositories, services, handlers, override stubs, OpenAPI, GraphQL SDL, SDK | the same frontend artifacts, from the emitted OpenAPI document |
-  | TypeScript (Level 3.5) | `codegen:check`: regenerate and diff, fails CI on any difference | types, typed wrappers, OpenAPI, SDL, SDK, override stubs | default screens, route table, theme |
+  | TypeScript (Level 3.5) | `codegen:check`: regenerate and diff, fails CI on any difference | types, typed wrappers, OpenAPI, SDL, SDK, override stubs | — |
+  | TypeScript/React frontend (Level C, star-board) | `star-board check`: regenerate from the committed document and diff `src/generated`; `features/` is never touched | types, zod, typed client, action hooks, default screens, registry, routes, nav, i18n defaults, manifest; tokens outputs (theme, variables, contract) | — |
 
   The shared data hooks (`useEntity`, `useEntityList`, `useView`,
   `useMutation`) are hand-written once and are **not** generated, so no

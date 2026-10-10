@@ -1,9 +1,12 @@
 # The generated frontend track: screens from the OpenAPI document
 
-Status: a design for a fourth public track, not yet a shipped framework. It
-extends `typescript/02` (types and hooks are generated today) to whole
-default screens, so a feature exists for a human from the same `generate`
-run that gives it to an agent (`shared/13`). The backends emit the
+Status: shipped as [star-board](https://github.com/digitally-rendered/-star-board-)
+(TypeScript/React, `@star-board/*`; HARD GATE 1 passed 2026-10-10: generated
+example app, parity, override round trip, coverage). It extends
+`typescript/02` (types and hooks were generated before it) to whole default
+screens, so a feature exists for a human from the same `generate` run that
+gives it to an agent (`shared/13`). Visual-baseline capture and the
+publish gate are still open in its plan. The backends emit the
 contract; this track consumes it. One frontend generator serves the
 Python, Go and TypeScript backends because all three emit OpenAPI 3 from
 the same schemas.
@@ -134,13 +137,15 @@ for agents), and hide or deny under the same missing capability.
 
 ## 7. Tests
 
+Each row names the star-board check that enforces it (paths in that repo).
+
 | Concern | Check |
 |---|---|
-| generator input | contract test: a document missing `x-view`, `x-ui-*`, operation ids or capability tags fails with a named error |
-| drift | the drift check (`shared/02` §1, `codegen:check`) over `src/generated/` |
-| pre-commit safety | the file-only OpenAPI build runs with no server and no database in the pre-commit hook; a test asserts its output equals the served `/openapi.json` |
-| override integrity | duplicate specificity fails the build; an override not using generated hooks or types fails the ratchet; the generator leaves `features/` untouched (snapshot of `features/` before and after `generate`) |
-| default screens | every generated form validates with the generated zod schema; every list renders the view's columns; `axe` passes on every generated page; every interactive element has `data-testid` |
-| parity | one test per operation across REST, MCP and screen |
-| renderer isolation | an AST test: `src/generated/` imports the renderer only through the registry's component contract |
-| live | Playwright: a generated feature's full workflow with no override, then the same with an override registered |
+| generator input | `packages/spec/src/load-document.test.ts`: a document missing `x-view`, `x-ui-*`, operation ids, `x-capabilities` or `x-schema-version` fails with a named error (`fixtures/negative/*.json`); `packages/spec/src/node-free.test.ts`: no node built-ins needed for a parsed object |
+| drift | `star-board check` (`packages/generator/test/drift.test.ts`, `packages/cli/test/run.test.ts`); CI runs `pnpm codegen:check` over `examples/petstore-ui/src/generated` |
+| override integrity | duplicate specificity fails (`packages/core/src/registry/registry.test.ts`); the generator never touches `features/` (`packages/generator/test/override-safety.test.ts`, `examples/petstore-ui/src/overrides.test.tsx`); `tools/fitness.ts` classifies `generated/*` and `features/<schema>/*` and fails an override that fetches or redeclares a shape |
+| default screens | every generated screen renders with fixture data, passes axe and carries its test ids (`examples/petstore-ui/src/screens.test.tsx`); emitted TSX compiles against the prop contracts (`packages/generator/test/compile.test.ts`); zod agrees with the backend validator by property (`packages/generator/test/zod-agreement.test.ts`) |
+| parity | one row per operation across REST, MCP tool and screen or action, with version, capability and input-schema agreement (`packages/testing/src/parity/parity.test.ts`); `star-board parity --mcp-tools`; the hide/deny matrix by posture (`examples/petstore-ui/src/capabilities.test.tsx`) |
+| renderer isolation | the ratchet counter `renderer_import_outside_registry` (`tools/ratchet.ts`) and the dependency-cruiser levels (`tools/depcruise.config.cjs`): generated code reaches the renderer only through the registry |
+| contract coverage | every contract key resolves on a fresh registry and has a story (`packages/renderer-mui/src/registerDefaults.test.tsx`, `packages/storybook/src/generated-stories.test.ts`) |
+| live | the full workflow with If-Match and a version bump, delete confirmation and the 404 state (`examples/petstore-ui/src/workflow.test.tsx`); Playwright spec present (`examples/petstore-ui/e2e/petstore.spec.ts`), run where browsers are installed |

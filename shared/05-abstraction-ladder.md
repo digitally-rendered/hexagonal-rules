@@ -66,6 +66,18 @@ schema-driven testing toolkit. In flight.
 
 Rules: `typescript/06`–`08`.
 
+### Level C — Spec-consuming generated client ([star-board](https://github.com/digitally-rendered/-star-board-), TypeScript/React)
+
+Not a rung of the backend ladder but its consumer: a frontend generator that
+reads the OpenAPI document any rung from Level 2 upward emits and produces the
+human surface (types, validators, typed client, action hooks, default screens,
+routes, the agent affordance) with a specificity-scored component registry for
+overrides and design tokens as the theme source. It is language-neutral toward
+the backend, so one frontend track serves Python, Go and TypeScript. Its own
+hexagon is enforced the same way (package levels, dependency-cruiser, ratchet).
+
+Rules: `typescript/12`, `typescript/13`.
+
 ### Level 4 — Compiled framework ([stellar-drive](https://github.com/digitally-rendered/stellar-drive), Go)
 
 The same model where the compiler enforces the dependency rule, package build
@@ -114,8 +126,9 @@ Rules: `go/`.
   requirement for a single static binary → **Level 4**.
 
 A product usually mixes rungs: Level 2 for its catalogue entities, Level 0
-for its one rich aggregate, Level 1 for its ingestion pipeline. The import
-rules are identical across the mix.
+for its one rich aggregate, Level 1 for its ingestion pipeline, Level C for
+every screen its document can describe. The import rules are identical
+across the mix.
 
 ## Moving up
 

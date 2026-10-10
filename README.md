@@ -8,7 +8,7 @@ and are never edited from here.
 
 ## Lineage
 
-The rules were distilled from three public frameworks and several private
+The rules were distilled from four public frameworks and several private
 applications built on the same architecture.
 
 | Source | Language | What it contributed |
@@ -16,6 +16,7 @@ applications built on the same architecture.
 | [slip-stream](https://github.com/digitally-rendered/slip-stream) | Python | The schema-driven hexagon as a generic library: registry decorators, `RequestContext`, filters, events, 4-layer container, testing utilities |
 | [stellar-drive](https://github.com/digitally-rendered/stellar-drive) | Go | The same model ported to Go with compile-time enforcement: package levels, function registry with scope specificity, event bus, domain errors, engine composition root |
 | [Syntact](https://github.com/digitally-rendered/Syntact) | TypeScript | The same model in TypeScript (in flight): monorepo package levels as rung-1 enforcement, transport-neutral driving layer, one executor for every channel, CAS-based versioning, the schema-driven testing toolkit, benchmark ratchet |
+| [star-board](https://github.com/digitally-rendered/-star-board-) | TypeScript + React | The generated frontend track: default screens, typed client, action hooks, routes and the agent affordance generated from the OpenAPI document any of the backends emit; a specificity-scored component registry for overrides; design tokens as the theme source; parity across REST, MCP and screens |
 | a classical DDD application | Python + React/TS | Explicit DDD + Ports & Adapters (entities, value objects, aggregates, use cases, ports), React hexagonal rules, authorization and test-tier discipline |
 | a plugin-pipeline application | Python | Plugin-ensemble hexagon, provenance chains, content-addressed stage cache, the vet/judge layer, eval methodology, enforcement learnings |
 | a schema-driven application | Python + React/TS | The three-tier decision rule, the enforcement ratchet, override policy, frontend codegen and data hooks |
@@ -66,7 +67,7 @@ typescript/  TypeScript rules: frontend (01–05, 12–13) and Node backend (06�
   09-node-ddd-ports-adapters.md the classical hexagon in Node
   10-node-pipeline-and-ai-harness.md plugin ensemble, ingestion lifecycle and AI harness in Node
   11-privacy-implementation.md the eight privacy layers in Node
-  12-generated-frontend.md     the frontend track: whole default screens from the OpenAPI document, component registry with specificity overrides, renderer decision (MUI), parity with REST and MCP
+  12-generated-frontend.md     the frontend track (star-board): whole default screens from the OpenAPI document, component registry with specificity overrides, renderer decision (MUI), parity with REST and MCP
   13-design-system-and-figma.md the design system as a hexagon: tokens, schema→component contract, Figma as adapter, the design MCP server as a build tool, design skills
 
 go/          Go rules
@@ -112,8 +113,8 @@ rules; the cells name the per-language idiom file.
 | Conventions | `python/05` | `typescript/04` | `go/02` |
 | Frontend hexagon | — | `typescript/01`–`05` | — |
 | Generated agent surface (application MCP) | `python/02` §17 (design) | `typescript/06` §6 (design) | `go/01` §1 (design) |
-| Generated frontend track (screens from OpenAPI) | emits the document (`shared/02` §6a) | `typescript/12` | emits the document (`shared/02` §6a) |
-| Design system and Figma | — | `typescript/13` | — |
+| Generated frontend track (screens from OpenAPI) | emits the document (`shared/02` §6a) | `typescript/12` (star-board) | emits the document (`shared/02` §6a) |
+| Design system and Figma | — | `typescript/13` (star-board tokens) | — |
 | Spec workflow | `specs/01`–`06` (language-agnostic) | same | same |
 | Three brains, autonomy and review loop | `shared/14`, `shared/15` (language-agnostic) | same | same |
 
@@ -145,6 +146,10 @@ or a rule file is missing from this README.
    adapters.
    Generate the application MCP server with the routes and UI types, and
    add the parity, live-client and agent-eval tests (`shared/13`).
+7. For the human surface, point star-board at the committed OpenAPI document
+   (`star-board generate --document openapi.json --out src/generated
+   --features src/features`), register overrides under `src/features/`, and
+   run `star-board check` and `star-board parity` in CI (`typescript/12`).
 6. Index the repo with GitNexus, copy the hook, permission and `CLAUDE.md`
    block templates, register the document index read-only, and define a
    group when the product spans repos (`shared/12`).
