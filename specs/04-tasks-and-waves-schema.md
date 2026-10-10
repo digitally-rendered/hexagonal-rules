@@ -52,6 +52,10 @@ phase needs that the previous produced).
   order when phases were reorganised, and the overview says so.
 - A sub-task is one logical unit (one entity, one use case, one component,
   one hook, one migration) and names the file path when it is known.
+- The first task of a wave that introduces or changes a schema is the
+  schema task: write or change the file, register it, run `generate`, and
+  commit the generated surfaces; feature tasks depend on it (`shared/07`
+  B1). A task touching generated output by hand is invalid.
 - Every top-level task ends with `_Requirements: <ids>_`. A task with no
   requirement is scope creep; a requirement with no task is a gap.
 - Tests are tasks, not afterthoughts: unit, property, integration, E2E, and

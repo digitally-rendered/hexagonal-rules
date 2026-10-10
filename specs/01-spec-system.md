@@ -98,7 +98,8 @@ of the enforcement ladder for agents, not a substitute for CI checks.
    is the source of truth for what exists (Built / Partial / Stub / Mock /
    Missing, each with evidence).
 2. **Every task cites requirements; every property validates requirements;
-   every checkpoint names commands and pass criteria.**
+   every checkpoint names commands and pass criteria; every user story names
+   its schema** (`specs/02` rule 9).
 3. **Waves encode real dependencies and are never auto-generated.** A task is
    in exactly one wave; waves are contiguous; every dependency edge crosses
    to a later wave.

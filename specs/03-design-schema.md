@@ -51,7 +51,13 @@ any spec with implementation.
    boundary so entities, repositories and use cases are unchanged.
 4. **Data models are concrete**: fields, types, nullability, identity, audit
    fields, indexes, migrations, and what clients may not set (server-supplied
-   identity and tenancy).
+   identity and tenancy). In a schema-driven repository the data model *is*
+   the JSON Schema file named by the requirement's `**Schema:**` line
+   (`shared/02`): the design embeds or links it, states its `x-*` policy and
+   version bump, lists the generated surfaces it will produce (routes, tools,
+   types, screens) and which of those need Tier 3 overrides. The schema file
+   is a deliverable of the design phase, validated by the registry before
+   tasks are written; prose that disagrees with the schema is wrong.
 5. **Error handling is a table**, keyed by scenario, with the status code and
    the exact response shape; frontend handling is a sibling table (redirect,
    alert, retry, empty state).
@@ -81,4 +87,7 @@ any spec with implementation.
   are format-validated.
 - Every property has `Validates: Requirements …` with ids that exist.
 - Every API endpoint in the table appears in a task.
+- Every schema named by a requirement loads in the registry (envelope,
+  audit fields, declared `x-*` only) and appears under `## Data Models`;
+  a schema change states its version bump and compatibility.
 - Every "to be removed" item in the code inventory appears in a task.

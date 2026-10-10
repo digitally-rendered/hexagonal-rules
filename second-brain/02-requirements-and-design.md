@@ -47,6 +47,11 @@ private or business facts; the spec repo holds no secrets.
   use: inspect the code at a stated commit, record findings with file and
   line, and label each as built / partial / stub / mock / missing.
 
+Requirement rows carry a `schema` column (the entity, view or operation the
+story names, per `specs/02` rule 9) so the fact registry, the requirement
+and the generated surfaces share one key; a fact cited by a criterion about
+data shape lives in the schema's `x-*-reason` text, not restated in prose.
+
 ## 4. Audience and privacy for specs
 
 - Steering and most specs are internal. Trust and accessibility statements,

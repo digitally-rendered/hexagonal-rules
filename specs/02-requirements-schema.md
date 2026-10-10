@@ -22,6 +22,7 @@
 ## Requirements
 ### Requirement N: <Title>
 **User Story:** As a <role>, I want <capability>, so that <outcome>.
+**Schema:** `schemas/<entity>.json` (new | changed: <fields>) | `views/<view>.json` | operation `<schema>_<op>` | none: <reason>
 #### Acceptance Criteria
 1. WHEN <trigger> THEN THE system SHALL <response>
 2. IF <condition> THEN THE system SHALL <response>
@@ -83,6 +84,19 @@ prefixed ids (`P1`, `L1`, `T1`); `requirements.md` remains the index.
 8. A requirement that is a legal or professional boundary (professional-
    advice limits, privacy law, accessibility law) names the law and the
    mechanical guard, not only the intent.
+9. **Every user story names its schema.** In the generative stack the
+   schema is what produces the REST routes, the MCP tools, the generated
+   types and the screens (`shared/13`, `typescript/12`), so a story without
+   a schema has nothing to generate and nothing to test against. The
+   `**Schema:**` line names the entity schema (new, or changed with the
+   fields), the view descriptor, or the registered Tier 3 operation the story
+   introduces or alters. `none` is allowed only with a reason (pure UI
+   behaviour over an existing schema, an operational or documentation story),
+   and such a story still cites the existing schema it renders or operates.
+   Acceptance criteria about data shape, validation and policy are written
+   as schema facts (`required`, enums, formats, `x-owner-field`, `x-*-reason`)
+   so the criterion and the generated behaviour cannot drift; the criterion
+   cites the field.
 
 ## 4. Validation
 
@@ -91,3 +105,8 @@ prefixed ids (`P1`, `L1`, `T1`); `requirements.md` remains the index.
 - Every requirement id is referenced by at least one task after `tasks.md`
   exists; orphan requirements are a finding.
 - Cross-spec references name the spec directory and its phase.
+- Every requirement has a `**Schema:**` line; a named schema or view file
+  exists in the spec's `schemas/` (draft) or the repository's schema
+  directory by the time `design.md` is approved; a named operation exists in
+  the design's registry table; `none` carries a reason. A story whose
+  criteria mention a field absent from its schema is a finding.
