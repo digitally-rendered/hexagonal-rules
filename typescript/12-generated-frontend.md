@@ -2,11 +2,14 @@
 
 Status: shipped as [star-board](https://github.com/digitally-rendered/-star-board-)
 (TypeScript/React, `@star-board/*`; HARD GATE 1 passed 2026-10-10: generated
-example app, parity, override round trip, coverage). It extends
+example app, parity, override round trip, coverage; HARD GATE 2 passed the
+same day: CI green on main including a browser end-to-end job, publish
+dry-run of nine packages, 342 visual baselines). It extends
 `typescript/02` (types and hooks were generated before it) to whole default
 screens, so a feature exists for a human from the same `generate` run that
-gives it to an agent (`shared/13`). Visual-baseline capture and the
-publish gate are still open in its plan. The backends emit the
+gives it to an agent (`shared/13`). Open items live in its `.kiro/handoff.json`
+remediation rows (backend extension emission, CLI token sync, dark-mode body
+background in Storybook). The backends emit the
 contract; this track consumes it. One frontend generator serves the
 Python, Go and TypeScript backends because all three emit OpenAPI 3 from
 the same schemas.
