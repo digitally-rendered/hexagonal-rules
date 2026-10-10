@@ -34,8 +34,9 @@ tracked but not gated).
 - Name collisions are **renamed, never merged**: controller-qualified names for
   duplicate short names; an `Api` prefix when a Tier 3 model's bare name
   collides with a Tier 1/2 export. Shapes were verified to differ.
-- `npm run codegen:check` regenerates and diffs in CI; drift is a build
-  failure.
+- The drift check (`shared/02` §1; here `npm run codegen:check`) regenerates
+  and diffs in CI; drift is a build failure. It covers the generated files
+  of §2 only; the data hooks of §3 are hand-written and not covered.
 - Never hand-declare an `interface` for a shape a backend schema already
   describes.
 

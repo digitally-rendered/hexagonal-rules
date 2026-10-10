@@ -1,6 +1,6 @@
 # The abstraction ladder
 
-The sources are not five architectures. They are one hexagon at five levels
+The sources are not six architectures. They are one hexagon at six rungs
 of abstraction. Each level keeps every invariant of the one below it and
 replaces hand-written structure with generated or framework-provided
 structure. Pick the lowest level that expresses your domain, and move up when
@@ -81,8 +81,10 @@ Rules: `go/`.
 
 - The dependency rule and the single composition root.
 - Ports as abstractions in the core; adapters by technology outside it.
-- The pipeline order (override → guards → validators → transforms → service →
-  post hooks) and pre/post abort semantics.
+- The pipeline order of `shared/01` §6 and its pre/post abort semantics, and
+  the scope resolution of `shared/01` §6a. Neither is restated here or in a
+  language file; rungs that do not yet pass the lifecycle-order test are
+  listed, dated, in the disagreement table below.
 - Domain errors with codes mapped to transport at the edge.
 - Stable logical identity separate from version identity.
 - Never skip a test; a rule names its check; overrides have a reason at the
@@ -135,8 +137,8 @@ rules are identical across the mix.
 | Case conversion at the API edge | axios-case-converter middleware | generated per-schema mappers, no middleware | generated mappers when a codegen exists; middleware otherwise |
 | Line length | 100 | 88 | per repo; never mixed |
 | Hook order across stages | — | some rungs ran all global hooks before any schema-specific hook | global-before-specific **within each stage** (`shared/01` §6) |
-| Post-hook failure | — | one rung surfaced it as 500 | logged, response unchanged: the write is committed (`shared/01` §6) |
-| Custom validators vs schema validation | — | one rung ran custom validators before schema validation | schema validation first, then guards, then custom validators |
+| Post-hook failure | — | one rung surfaced it as 500 | logged, response unchanged: the write is committed (`shared/01` §6). **Level 3 currently dissents** (checked 2026-10-09: the Python library's event bus awaits post handlers with no error boundary, so a `HookError` raised in a `post_*` hook propagates to the transport). The rule stands; the Python rung's file states the rule and its test, and this row is deleted when the rung passes the post-hook test |
+| Custom validators vs schema validation | — | one rung ran custom validators before schema validation | schema validation first, then guards, then custom validators (`shared/01` §6). **Level 4 currently dissents** (checked 2026-10-09: the Go REST handler runs guards, registered validators and transforms, and the service validates against the JSON Schema afterwards). The rule stands; the Go rung's file states the rule and its lifecycle-order test, and this row is deleted when the rung passes it |
 | ETag source | — | header, body hash, and id:version schemes coexisted | one function over the result object (`entity_id:record_version`) |
 | Operator spelling | — | `_startswith` vs `_starts_with` | `_startswith` canonical; the alias accepted and normalised at parse |
 | UUID storage in Mongo | BSON Binary | strings (v7) | one per project; normalisation rule in `shared/03` §6 |

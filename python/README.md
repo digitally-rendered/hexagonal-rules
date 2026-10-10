@@ -10,6 +10,7 @@ ladder.
 | `03-plugin-pipeline.md` | Level 1: plugin ensemble, pipeline, LLM adapters | a pipeline application |
 | `04-testing.md` | all | all sources |
 | `05-conventions.md` | all | all sources |
+| `06-privacy-implementation.md` | all | the eight privacy layers of `shared/08` in Python; a classical DDD application and a schema-driven application |
 
 Stack assumed: Python ≥ 3.12, Poetry, FastAPI, Pydantic v2, Motor or
 SQLAlchemy 2 (async), pytest + pytest-asyncio.

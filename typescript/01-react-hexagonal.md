@@ -9,14 +9,25 @@ src/
 │   └── utils/          pure functions
 ├── application/
 │   ├── hooks/          use cases: state + orchestration through ports
-│   └── context/        app-level state (selected case, services provider)
-├── ports/              TypeScript interfaces only (IUserService, ICaseService, …)
+│   └── context/        app-level state (selected-record context, services provider)
+├── ports/              TypeScript interfaces only (IUserService, I<Entity>Service, …)
 ├── adapters/
 │   ├── primary/        pages / container components; routing; composition
 │   └── secondary/      service implementations (HTTP, storage, websocket)
 ├── infrastructure/api/ shared HTTP client
-└── generated/          codegen output (see 02-generated-layer.md)
+├── generated/          codegen output (see 02-generated-layer.md); under the frontend track (12):
+│   ├── domain/         generated default components (domain layer rules apply)
+│   ├── application/    generated typed action hooks (application layer rules apply)
+│   ├── adapters/       generated typed client (secondary adapter rules apply)
+│   └── registry.ts     the component registry: the port between generator and app
+└── features/<schema>/  registered overrides (12 §3): components/ obey domain rules,
+    ├── components/     hooks/ obey application rules; nothing here fetches or
+    ├── hooks/          declares a shape the generated layer already has
+    └── index.ts        registerComponent(...) calls only
 ```
+
+The fitness test classifies `generated/*` and `features/<schema>/*` by their
+sub-folder, so the same import rules apply to generated and override code.
 
 Path aliases `@domain/`, `@application/`, `@ports/`, `@adapters/` are used for
 every cross-layer import; never relative paths across layers.
@@ -30,7 +41,9 @@ Enforce with an ESLint `no-restricted-imports` or boundaries rule.
 
 - MUST NOT fetch, call services, read context that fetches, or have side
   effects. All data and callbacks arrive as props. Local state only
-  (form state, open/closed).
+  (form state, open/closed). Check: the AST fitness test over
+  `domain/components/**` fails on an import of `fetch`, `axios`, the API
+  client, the services context or any `adapters/` path.
 - Validation is client-side and expressed in props/Zod; errors are rendered
   from props.
 - Highly reusable; styled with the component library (`sx`) plus utility
@@ -42,7 +55,9 @@ Enforce with an ESLint `no-restricted-imports` or boundaries rule.
 - One hook per business capability (`useOrderManagement`, `useOnboardingFlow`,
   `useNegotiation`). It returns state and the actions on that state.
 - MUST NOT call `fetch`/`axios` directly. It calls a **port** obtained from the
-  services context (`useServices()`) or passed as a parameter.
+  services context (`useServices()`) or passed as a parameter. Check: the
+  same fitness test over `application/hooks/**` fails on a direct HTTP
+  import; the drift ratchet gates `apiclient_in_deps`.
 - Depend on primitive request parameters in effect/callback dependency arrays,
   never on the client object.
 - Hand-rolled `[data, loading, error]` trios around a fetch are Tier 2

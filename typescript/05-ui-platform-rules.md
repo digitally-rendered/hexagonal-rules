@@ -11,7 +11,7 @@ sources, an embedded micro-frontend, and the mobile/PWA and onboarding specs.
 - One `ServiceFactory` builds every secondary adapter from a shared config
   (API base URL, websocket config, retry and cache settings). One
   `ServiceProvider` puts the instances in context. `useServices()` (and
-  per-service hooks `useCaseService()` etc.) are the only way application
+  per-service hooks `use<Entity>Service()` etc.) are the only way application
   hooks obtain a port implementation; a hook that constructs an adapter is a
   violation.
 - Registering a new adapter means: port interface → adapter → factory entry
@@ -94,9 +94,10 @@ sources, an embedded micro-frontend, and the mobile/PWA and onboarding specs.
 
 ## 7. Internationalisation
 
-- User-facing strings are extracted; EN and FR are first-class where the
-  market requires it; regulated wording is translated by the same reviewed
-  source as the primary-language disclaimers, not ad hoc.
+- User-facing strings are extracted; the primary language and the market's
+  second language are first-class where the market requires it; regulated
+  wording is translated by the same reviewed source as the primary-language
+  disclaimers, not ad hoc.
 
 ## 8. Embedded micro-frontends
 
@@ -111,16 +112,16 @@ sources, an embedded micro-frontend, and the mobile/PWA and onboarding specs.
 
 ## 9. Shared UI primitives
 
-- `EmptyState`, `UnsavedChangesDialog` (with `useUnsavedChanges`),
-  `SkipToContent`, `HelpCenter`, a notification bell fed by the notification
-  domain, and session-timeout handling (`useSessionTimeout`) are shared
-  components and hooks; pages do not re-implement them.
-- Long-running work is surfaced through a progress stream hook
-  (`useProgressStream` over SSE) that is ownership-scoped on the server, with
-  queued / running / review-required / failed / stale states and an
-  authorized retry action.
-- Multi-case users get a selected-case context and a switcher; pages never
-  assume `cases[0]`.
+- Shared primitives exist for the empty state, unsaved changes (component
+  plus hook), the skip link, help, notifications (fed by the notification
+  domain) and session timeout; pages do not re-implement them. Check: an
+  AST or grep test fails a page that defines its own component for one of
+  these roles instead of importing the shared one.
+- Long-running work is surfaced through one progress-stream hook (over
+  SSE) that is ownership-scoped on the server, with queued / running /
+  review-required / failed / stale states and an authorized retry action.
+- Users with several records get a selected-record context and a switcher;
+  pages never assume the first record in a list is the selected one.
 
 ## 10. Admin portal
 

@@ -86,7 +86,8 @@ prefixed ids (`P1`, `L1`, `T1`); `requirements.md` remains the index.
    mechanical guard, not only the intent.
 9. **Every user story names its schema.** In the generative stack the
    schema is what produces the REST routes, the MCP tools, the generated
-   types and the screens (`shared/13`, `typescript/12`), so a story without
+   types and, once the frontend track (`typescript/12`) ships, the default
+   screens (`shared/13` §2a says what generates today), so a story without
    a schema has nothing to generate and nothing to test against. The
    `**Schema:**` line names the entity schema (new, or changed with the
    fields), the view descriptor, or the registered Tier 3 operation the story

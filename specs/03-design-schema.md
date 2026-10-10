@@ -55,7 +55,8 @@ any spec with implementation.
    the JSON Schema file named by the requirement's `**Schema:**` line
    (`shared/02`): the design embeds or links it, states its `x-*` policy and
    version bump, lists the generated surfaces it will produce (routes, tools,
-   types, screens) and which of those need Tier 3 overrides. The schema file
+   types; screens once the frontend track ships, `shared/13` §2a) and which
+   of those need Tier 3 overrides. The schema file
    is a deliverable of the design phase, validated by the registry before
    tasks are written; prose that disagrees with the schema is wrong.
 5. **Error handling is a table**, keyed by scenario, with the status code and

@@ -7,22 +7,54 @@ in one place. Generalised from the skill set of the pipeline application.
 
 ## 1. The skill set
 
-| Kind | Skills (one each) | Purpose |
+One skill per **role** below; a project names its skills as it likes (the
+names here are placeholders, not an inventory to copy), but every role has
+exactly one skill and every skill fills exactly one role. Check: a test
+lists `.claude/skills/*/SKILL.md`, reads the `role` field in each
+frontmatter and fails on a missing or duplicated role.
+
+| Role | Skill (placeholder) | Purpose |
 |---|---|---|
 | Map | `run-<system>` | the framework map: what runs what, entry points for parse, build, vet, derive, package |
-| Acquire | `source-inventory`, `corpus-prep` | inventory sources and flag acquisition gaps before extraction; audit download → convert → clean → segment → chunk and map each symptom to its stage |
+| Acquire | `source-<kind>` (one per source kind), `corpus-prep` | inventory sources and flag acquisition gaps before extraction; audit download → convert → clean → segment → chunk and map each symptom to its stage |
 | Chunk | `chunking` | the boundary layer: section-aware chunking, atomic groups, density versus size |
 | Build | `run-<system>` (build) | build a package; smoke mode; cache behaviour |
-| Vet | `extraction-vet`, `run-vet` | deterministic accuracy measures first; then the judge: prefilter, calibration, run and re-run, the fix loop, resilient runners, reading results |
-| Audit | `pack-audit`, `plugin-review`, `<contract>-audit` | fixed-shape reports: counts versus a yardstick, run state, misses, spot checks, contract quotes with literal violations |
-| Derive | `stage-dag`, `rules-cascade`, `<field>-mapping`, `<interview>-intake`, `<form>-templating` | each deterministic derived artifact and its grounding audit |
-| Drive | `pipeline-cycle` | the self-driving loop: locate the stage, run its skill, check the gate, advance; stop only on a real decision |
-| Report | `pipeline-progress` | where each subject is, which gates passed, what is stale, the exact next command |
-| Hygiene | `reindex-check`, `gitnexus-{guide,cli,exploring,impact-analysis,debugging,refactoring}`, `karpathy-guidelines` | pre-edit index freshness; the code-graph skill family (`shared/12`); behavioural guardrails for code changes |
+| Vet | `vet-<measure>` | deterministic accuracy measures first; then the judge: prefilter, calibration, run and re-run, the fix loop, resilient runners, reading results |
+| Audit | `audit-<subject>` | fixed-shape reports: counts versus a yardstick, run state, misses, spot checks, contract quotes with literal violations |
+| Derive | `derive-<artifact>` (one per deterministic derived artifact) | the derived artifact and its grounding audit |
+| Drive | `<system>-cycle` | the self-driving loop: locate the stage, run its skill, check the gate, advance; stop only on a real decision |
+| Report | `<system>-progress` | where each subject is, which gates passed, what is stale, the exact next command |
+| Hygiene | `reindex-check`, the `gitnexus-*` family, `knowledge-maintenance` | pre-edit index freshness; the code-graph skill family (`shared/12`); the compiled-knowledge rules of §1a |
 
 Review agents (architecture reviewer, plugin developer and fixer,
 evaluator, package auditor, contract auditor) are the write-capable or
-read-only counterparts invoked by the skills.
+read-only counterparts invoked by the skills; they are roles too, and the
+same uniqueness test covers `.claude/agents/`.
+
+### 1a. The `knowledge-maintenance` skill
+
+The one skill that states how a brain's compiled knowledge is kept honest,
+following the LLM-Wiki pattern as `second-brain/01` makes it strict. It is
+read by every agent that ingests, compiles, queries or lints a brain, and
+it holds no record facts. Its contract:
+
+- **ingest**: raw sources are immutable and hashed before anything reads
+  them; an ingest proposes rows and compile changes, never edits raw.
+- **compile**: compiled pages (`wiki/`) are regenerated from rows and
+  marked generated; the index page and related pages are touched in the
+  same pass; the LLM proposes the compile, code applies and renders it
+  (`second-brain/01` §4a).
+- **query**: an answer is filed back as a cited page or a gaps row, with a
+  `query` op in the log (`second-brain/01` §7).
+- **lint**: deterministic lint first (contradictions, broken links, orphan
+  pages, stale claims, concepts without a page), then an LLM pass that only
+  proposes next questions into `gaps.jsonl` (`second-brain/01` §11).
+- **log**: every op is one row of the closed enum in the brain's one
+  `log.md` (`second-brain/01` §11); the skill never writes a second log.
+
+Check: the skill file exists in every project that has a brain, its
+sections are exactly these five, and a test asserts each named check
+command in it exits 0 on the fixture brain.
 
 ## 2. The skill contract
 

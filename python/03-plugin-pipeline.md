@@ -12,12 +12,12 @@ output is vetted by an independent judge layer
 
 | Layer | Location | Contents |
 |---|---|---|
-| Domain | `core/document.py`, `core/plugin.py`, `core/context.py`, `core/config.py`, `core/legislation.py` | `Document`, `Field`, `ExtractionResult`, plugin base hierarchy, `ExtractionContext` (pure DTO), config, closed vocabularies |
-| Ports | `domain/ports.py` | primary: `DocumentParserPort`, `ConflictResolverPort`; secondary: `DocumentReaderPort`, `PluginRepositoryPort`, `CachePort`, `LLMPort`, `StoragePort`, `MetricsPort`, `ConfigurationPort`, `ExportPort`, `FormSchemaPort`, `FormPrefillPort` |
+| Domain | `core/document.py`, `core/plugin.py`, `core/context.py`, `core/config.py`, `core/vocab.py` | `Document`, `Field`, `ExtractionResult`, plugin base hierarchy, `ExtractionContext` (pure DTO), config, closed vocabularies |
+| Ports | `domain/ports.py` | primary: `DocumentParserPort`, `ConflictResolverPort`; secondary: `DocumentReaderPort`, `PluginRepositoryPort`, `CachePort`, `LLMPort`, `StoragePort`, `MetricsPort`, `ConfigurationPort`, `ExportPort`, `<Artifact>SchemaPort`, `PrefillPort` |
 | Services | `domain/services.py` | `DocumentParsingService`, `ConflictResolutionService`, `FieldEnrichmentService`; orchestration via injected ports |
-| Adapters | `adapters/` | readers (filesystem, S3, HTTP), plugin repository, LLM adapters (Ollama, Claude CLI, Codex CLI, MLX), prompt layout/versions, schema storage |
+| Adapters | `adapters/` | readers (filesystem, S3, HTTP), plugin repository, LLM adapters (local model server, hosted provider CLI, local inference runtime), prompt layout/versions, schema storage |
 | Plugins | `plugins/{extraction,detection,validation,enrichment}/` | concrete strategies |
-| Composition root | `core/parser.py` (`UniversalParser`), CLI | wires ports to adapters; creating default adapters here is allowed |
+| Composition root | `core/parser.py` (`<Entity>Parser`), CLI | wires ports to adapters; creating default adapters here is allowed |
 | Pipeline | `pipeline/` | build drivers, stage cache, run store, provenance, gate records, miss log |
 | Validation | `validation/` | orchestrator, judges, rubric, findings, source index |
 
@@ -77,11 +77,11 @@ class MyExtractor(ExtractionPlugin):
 ## 4. Services and ports
 
 - Services take ports in the constructor and never construct adapters.
-- The `LLMPort` is a wide ABC of named operations (`extract_points_of_law`,
-  `classify_entities`, `generate_form_interview`, …), each documenting the
+- The `LLMPort` is a wide ABC of named operations (`extract_<entity>`,
+  `classify_<entity>`, `generate_<artifact>`, …), each documenting the
   context keys it requires and the keys it returns. Adapters implement all of
   them; prompts live with the adapter (`_llm_prompts*.py`), schemas in
-  `_ollama_schemas.py`.
+  `_<provider>_schemas.py`.
 - Prompt templates are versioned (`prompt_versions.py`) and listed in a
   manifest; the manifest is checked by pre-flight.
 - Model tiers are one table (`model_tiers.py`: REASONING, VET_JUDGE, …); the
@@ -95,9 +95,10 @@ class MyExtractor(ExtractionPlugin):
   domains, categories, stage range, freshness), resolved scope, and
   outputs. Full rebuild is the degenerate plan.
 - Stage cache key per stage (`compute_stage_key(stage, inputs)`): e.g.
-  `extract_pol = chunk_text_hash + prompt_hash + schema_hash + model_hash`;
-  `extract_rules` adds the digest of the PoL **content** consumed. Sampler
-  options that do not change semantics are not in the key.
+  `extract_<entity> = chunk_text_hash + prompt_hash + schema_hash +
+  model_hash`; a dependent extraction stage adds the digest of the upstream
+  entity **content** it consumed. Sampler options that do not change
+  semantics are not in the key.
 - A per-package run store (SQLite) records runs, stage runs (`success`, `success-cached`,
   `fail`, `running`), LLM calls, misses, gate records. Stranded `running` rows
   after a kill are cosmetic.
@@ -119,7 +120,7 @@ class MyExtractor(ExtractionPlugin):
   raising caps.
 - Silent fallbacks (`{}` on unparsable JSON) are forbidden; a parse failure is
   a recorded miss with the raw response kept.
-- Rate-limit and auth-death errors are typed (`ClaudeCliRateLimitError`) so the
+- Rate-limit and auth-death errors are typed (`<Provider>RateLimitError`) so the
   orchestrator can distinguish "wait and resume" from "abort as systemic".
 - Spend is tracked in the run summary and logged at thresholds; enforcement is
   opt-in for metered users.

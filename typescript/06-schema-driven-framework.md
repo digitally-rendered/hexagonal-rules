@@ -6,7 +6,7 @@ stellar-drive, currently in flight; these rules follow its design and will
 be confirmed against its test paths when it ships. Mirrors
 `python/02-schema-driven-framework.md` and `go/01-go-hexagonal.md`.
 
-Stack: Node ≥ 22 (verified on Bun), TypeScript strict with
+Stack: see `typescript/README` for the Node floor; TypeScript strict with
 `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`,
 `verbatimModuleSyntax`, ESM only; Ajv 2020-12 + formats; Hono on Web
 Standard Request/Response (Fastify behind the same contract); the Mongo
@@ -30,7 +30,8 @@ packages/
   adapter-fastify   L5     Fastify bindings over the same contract
   adapter-graphql   L5     SDL/resolvers/subscriptions; runs the executor
   codegen           L5     JSON Schema → TS types, typed wrappers, OpenAPI, SDL, SDK, override stubs
-  mcp               L5     tool server exposing schema/query/codegen tools
+  mcp               L5     developer tool server exposing schema/query/codegen tools
+  mcp (application) L5     (planned; design in §6 and shared/13 §2a) generated application MCP server, createMcpServer(engine)
   engine            L6     composition root, config, lifecycle, storage routing
   testing           L6     test engine, data generator, lifecycle runner, event capture, hex checks, port contract suites
   cli               L7     init | run | schema | generate | migrate | mcp | bench
@@ -52,8 +53,8 @@ benchmarks/         L7     micro + HTTP load + compat
   `deleted_at`, `*_by`) + `data`. `AUDIT_FIELD_NAMES` is one tuple;
   `etagOf(doc)` is one function (`W/"<entity_id>:<record_version>"`).
 - **DomainError** with a closed `ErrorCode` union and **one**
-  `HTTP_STATUS` table (shared table plus `PRECONDITION_FAILED` 412,
-  `RATE_LIMITED` 429, `SERVICE_UNAVAILABLE` 503); constructors per code;
+  `HTTP_STATUS` table equal to `shared/01` §5 (a one-authority pin test
+  asserts it); constructors per code;
   `HookAbort` for pre-hooks; `toProblem()` / `toEnvelope()` body builders.
 - **Events**: `OPERATIONS` (8) × pre/post = 16 `LifecycleEvent`s; bus with
   global-before-specific order within each stage, pre aborts on first
@@ -86,23 +87,20 @@ benchmarks/         L7     micro + HTTP load + compat
 ## 3. Registry, container, executor
 
 - `FunctionRegistry` fluent API (`handler`, `guard`, `validate`,
-  `transform`, `on`, `publish`, `storage`) with scope specificity scoring
-  (version+channel 4, channel 3, version 2, universal 1; mismatch
-  excluded), stable ordering, and `'*'` schema. Decorator syntax is not the
-  primary surface.
+  `transform`, `on`, `publish`, `storage`) with the scope resolution of
+  `shared/01` §6a over the axes **version** and **channel**, and `'*'`
+  schema. Decorator syntax is not the primary surface. Check: the
+  `property` project's "specificity resolution is a total stable order"
+  (`typescript/07` §4).
 - `Container` resolution: request override → schema-specific →
   storage-routed default → generated (through an injected service factory
   so the container never imports the generic service). Convention-based
   `discover()` (`<name>.repository.ts` exporting `<Pascal>Repository`,
   etc.) swallows only module-not-found.
-- `OperationExecutor.run(ctx)` is the one pipeline for every channel:
-  handler override → hydrate (missing or tombstoned is **always** 404
-  before any hook; existing-but-not-owned is 403 or 404 by one
-  project-wide posture) → guards → validators → before-transforms →
-  re-validate data → `pre_*` → preconditions (`If-Match` → 412) → service
-  → after-transforms → `post_*` (logged, never alters the response).
-  Bulk fires one `pre_bulk_*`/`post_bulk_*` and runs per-item hooks on
-  cloned contexts.
+- `OperationExecutor.run(ctx)` is the one pipeline for every channel. Its
+  order is `shared/01` §6; the gate-by-gate table with each gate's error
+  and test is §5 of this file, and nothing else restates it. Bulk fires one
+  `pre_bulk_*`/`post_bulk_*` and runs per-item hooks on cloned contexts.
 - Built-in ownership guard from `x-owner-field` (default `created_by`,
   `null` + reason = shared): privileged roles see all; others only their
   rows; no id → match-nothing on list; PATCH/DELETE check before write.
@@ -173,7 +171,8 @@ fail.
 - Schema CRUD routes are a dynamic table looked up per request, so runtime
   schema add/update/delete and hot reload need no remount; custom routes
   mount before schema routes so they cannot be shadowed.
-- `@<fw>/mcp` carries two servers (`shared/13`): the developer server the
+- Design (status in `shared/13` §2a: planned, nothing shipped): `@<fw>/mcp`
+  carries two servers; the developer server the
   CLI `mcp` command starts (schema, query, codegen tools; never deployed),
   and the **application server** `createMcpServer(engine)` generated from
   the registry: `<schema>_<op>` tools whose input schemas are the registry's
@@ -183,8 +182,9 @@ fail.
   `channel: "mcp"`, the principal and any OBO delegation, and runs
   `OperationExecutor.run`. `tools/list` is filtered by the policy port.
   Transports: stdio and streamable HTTP via the official TypeScript SDK; the
-  testing toolkit ships a client fixture and a parity suite over REST, UI
-  types and tools.
+  testing toolkit is to ship a client fixture and a parity suite over REST,
+  UI types and tools. All of this paragraph is a MUST-have (`shared/13`
+  §2), to be confirmed against test paths when it ships.
 - Response is the `{success, data, error, meta}` envelope with `meta.total`
   and `has_more` always present, or an RFC 7807 body, selected by config;
   both are produced by one module.

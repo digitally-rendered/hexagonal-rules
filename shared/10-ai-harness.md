@@ -3,8 +3,8 @@
 How model calls are made inside an ingestion or parsing system so that
 output is schema-valid, reproducible, cacheable, auditable, cheap to
 iterate on, and independently judged. Pairs with
-`shared/09-ingestion-lifecycle.md` (where the calls sit),
-`python/03-plugin-pipeline.md` (the parsing ensemble) and
+`shared/09-ingestion-lifecycle.md` (where the calls sit), the Level 1
+rung's plugin ensemble (`shared/05`) and
 `shared/06-evals-and-verification.md` (judging).
 
 ## 1. One port, many backends
@@ -99,16 +99,19 @@ iterate on, and independently judged. Pairs with
   corrections; shape and **rubric conformance** are validated before caching.
 - Judge identity is one table of model-hash prefixes; local judges register
   at run time; unknown judges report as `other`.
-- Retries use bounded backoff; the same error N times in a row or a known
-  death marker aborts the run as systemic; coverage below a floor makes the
-  run partial.
+- Retries use bounded backoff; **the same error N times in a row or a known
+  death marker aborts the run as systemic** instead of grinding out
+  thousands of identical failures (this is the one statement of the rule;
+  `shared/06` §6 cites it); coverage below a floor makes the run partial.
+  Check: the `judge` row of §8 (a fake adapter returning the same error N
+  times makes the run abort with a systemic status).
 - Three-judge adjudication for disputes; embeddings or cheap heuristics only
   triage order, never pass or fail.
 
 ## 7. Parsing and consuming with models
 
 - Document parsing is an **ensemble** of plugins with confidence and
-  provenance (`python/03-plugin-pipeline.md`); a per-row model labeler is a
+  provenance (the Level 1 rung, `shared/05`); a per-row model labeler is a
   plugin with a short timeout on the small tier.
 - Conflict resolution is consensus → highest confidence → model, and the
   model step is a port call that records an `override` step.
@@ -118,6 +121,9 @@ iterate on, and independently judged. Pairs with
   or simulate, and hand off; humans commit.
 
 ## 8. Harness tests
+
+Every rule above written as MUST or never is enforced by the row below
+that names its concern; a rule with no row is SHOULD until it has one.
 
 | Concern | Test |
 |---|---|

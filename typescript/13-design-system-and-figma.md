@@ -75,11 +75,14 @@ code binding is a design-only draft and is tagged so.
   its React component and props. The mapping file is generated from the
   component contract, so renaming a key renames both sides.
 - **The design tool's MCP server** is a build-brain tool
-  (`second-brain/06` §3): the coding agent reads a selected frame, its
+  (`shared/14` §3): the coding agent reads a selected frame, its
   variables and its component instances, and produces a registered
-  override, never a free-hand screen. It is registered read-only in the
-  project MCP config (`templates/mcp-project.json` pattern); it never runs
-  in production and never sees record data.
+  override, never a free-hand screen. It is registered in the project MCP
+  config, and **read-only is enforced by the permission allowlist**, not by
+  the MCP config (an `.mcp.json` entry cannot restrict a server's tools):
+  the fragment `templates/settings-permissions-design.json` pre-approves
+  only the server's read tools and leaves its write tools prompted. It
+  never runs in production and never sees record data.
 - Design files are a **source**, not a store of truth for code: a frame
   that disagrees with the tokens or the component contract is a design
   change request, recorded as a contradiction (`shared/07` §3), not a
@@ -90,8 +93,12 @@ code binding is a design-only draft and is tagged so.
 
 ## 5. Skills
 
-Each follows the skill contract (`shared/11` §5): declared inputs, outputs,
-checks and a report; no bypass flags.
+Each follows the skill contract (`shared/11` §2): a name and a description
+with trigger phrases, whether it is read-only or writes, a "what you never
+do" section where it touches anything irreversible, the commands with the
+gate each proves, dated gotchas, and links to the one canonical reference.
+The table adds the inputs, outputs and finishing checks each skill
+declares; none has a bypass flag.
 
 | Skill | Inputs | Does | Checks before it finishes |
 |---|---|---|---|
@@ -107,8 +114,8 @@ checks and a report; no bypass flags.
 |---|---|
 | design hexagon | import fitness test: `design/core/**` imports no Figma or renderer package |
 | tokens | schema validation of the tokens JSON; every semantic token has every mode; no primitive token referenced from a component |
-| generated theme | theme file is regenerated and diffed in CI like any generated file; a hand edit fails `codegen:check` |
+| generated theme | theme file is regenerated and diffed in CI like any generated file; a hand edit fails the drift check (`shared/02` §1) |
 | contract parity | every component key ↔ one Figma component ↔ one renderer; Code Connect mapping regenerated from the contract |
 | overrides from design | an override produced by the skill passes the fitness tests and the ratchet, and uses only generated hooks and types |
 | visual | Storybook screenshot baselines per key, mode and state; generated screens included |
-| no data in design tools | the design MCP server is read-only, project-scoped and absent from production config; fixtures only, never records |
+| no data in design tools | the design MCP server is read-only through the permission allowlist fragment `templates/settings-permissions-design.json` (a test parses the fragment and asserts only the server's read tools are allowed), project-scoped and absent from production config; fixtures only, never records |

@@ -10,10 +10,16 @@ the same schemas.
 
 ## 1. Input: the OpenAPI document, and nothing else
 
-- The generator reads **one OpenAPI 3.1 document** (built in-process or
-  fetched from `/openapi.json`), never the backend's schema files or source.
-  This removes the two-source split of `typescript/02` §2 once the backends
-  carry views and extensions into the document (`shared/02` §6a).
+- The generator reads **one OpenAPI 3.1 document**, never the backend's
+  schema files or source. The document is produced by a **file-only build
+  step** (schema loader → OpenAPI builder; no running application, no
+  database), so generation stays pre-commit safe, which is the property
+  `typescript/02` §2 protects today with file-derived Tier 1/2 types. The
+  served `/openapi.json` is the same document and a test asserts the two are
+  equal (`shared/02` §6a); the generator may read either, and pre-commit
+  reads the file-built one. This removes the two-source split of
+  `typescript/02` §2 once the backends carry views and extensions into the
+  document.
 - Required in the document: component schemas for Document, Create and
   Update variants with `x-schema-version`; `x-view` descriptors on view
   operations; `x-owner-field`; the `x-*-reason` texts; `x-ui-*` hints;
@@ -37,20 +43,24 @@ the same schemas.
 | `x-*-reason`, field titles, descriptions | help text, tooltips, column headers, i18n message keys with defaults | translations |
 | MCP tools of the same operations | the "ask the agent" affordance: a `why_` rationale panel and a simulate-then-apply flow next to the form (`shared/13` §4) | the panel |
 
-Generated files live under `src/generated/` and are never edited;
-`codegen:check` regenerates and diffs in CI.
+Generated files live under `src/generated/` and are never edited; the drift
+check (`shared/02` §1, here `codegen:check`) regenerates and diffs in CI.
 
 ## 3. The override model: a component registry with specificity
 
-Mirrors the backend registry (`shared/01` §pipeline, `typescript/06` §3) so
-one mental model covers both sides.
+Mirrors the backend registry (`shared/01` §6, `typescript/06` §3) so one
+mental model covers both sides.
 
 - A **component registry** keyed by `(schema, operation | field | slot,
-  scope)` where scope is `{version?, role?, channel?}`; the universal match
-  is the generated component.
-- **Specificity scoring** decides which registration wins: version+role 4,
-  role 3, version 2, universal 1, deterministic order on ties, duplicate
-  registrations at the same specificity are a build error.
+  scope)` where scope is `{version?, role?}`; the universal match is the
+  generated component.
+- Which registration wins is the scope resolution of `shared/01` §6a, the
+  same algorithm as the backend with **role in place of channel** as the
+  second axis (version+role 4, role 3, version 2, universal 1, mismatch
+  excluded); a component takes one match like a handler; duplicate
+  registrations at the same specificity are a build error. Check: the
+  registry reuses the backend's property test (resolution is a total stable
+  order) over generated registries.
 - Override granularity, from narrow to wide: field widget → field group →
   form or list section → whole screen → whole feature. Prefer the
   narrowest; a whole-screen override needs a reason comment at the site
@@ -92,8 +102,25 @@ virtualisation; record the choice in the application's design decisions.
 Generated components are domain components (props only); generated hooks
 are the application layer; the generated client is the secondary adapter;
 pages compose; the registry is the port between generator and app
-(`typescript/01`). The AST fitness tests run over `src/generated/` as over
-any other code. Accessibility, error presentation, roles, mobile and i18n
+(`typescript/01`). The generated tree and the override tree are split by
+layer so the fitness tests can classify every file:
+
+| Directory | `typescript/01` layer | Alias | May import |
+|---|---|---|---|
+| `src/generated/domain/` (field renderers, cards, forms, list cells) | `domain/components` | `@domain/generated/*` | `@domain/*` only; never a hook, the client or the registry |
+| `src/generated/application/` (typed action hooks, the shared data hooks' typed wrappers, route table) | `application/hooks` | `@application/generated/*` | `@domain/*`, `@ports/*` |
+| `src/generated/adapters/` (typed client over `apiClient`) | `adapters/secondary` | `@adapters/generated/*` | `@domain/*`, `@ports/*`, `infrastructure/api` |
+| `src/generated/registry.ts` (component contract, `registerComponent`) | `ports` | `@ports/component-registry` | domain types only |
+| `src/features/<schema>/components/` (override components) | `domain/components` | `@domain/features/*` | as domain components; props only |
+| `src/features/<schema>/hooks/` (override hooks) | `application/hooks` | `@application/features/*` | `@domain/*`, `@ports/*`, `@application/generated/*` |
+| `src/features/<schema>/index.ts` (the `registerComponent(...)` calls) | `adapters/primary` (composition) | — | everything; it is wiring |
+
+The import rule is `typescript/01` §1's for the layer each directory maps
+to; the only addition is that `features/` may import `generated/` and
+`generated/` never imports `features/` (the generator does not know the
+overrides exist). `typescript/01` §1 must carry the same two subtrees in its
+layer map for this table to be enforceable. The AST fitness tests run over
+`src/generated/` and `src/features/` as over any other code. Accessibility, error presentation, roles, mobile and i18n
 rules apply to generated output (`typescript/05`), and the generator is
 the place to fix a violation once for every screen.
 
@@ -110,7 +137,8 @@ for agents), and hide or deny under the same missing capability.
 | Concern | Check |
 |---|---|
 | generator input | contract test: a document missing `x-view`, `x-ui-*`, operation ids or capability tags fails with a named error |
-| drift | `codegen:check` over `src/generated/` |
+| drift | the drift check (`shared/02` §1, `codegen:check`) over `src/generated/` |
+| pre-commit safety | the file-only OpenAPI build runs with no server and no database in the pre-commit hook; a test asserts its output equals the served `/openapi.json` |
 | override integrity | duplicate specificity fails the build; an override not using generated hooks or types fails the ratchet; the generator leaves `features/` untouched (snapshot of `features/` before and after `generate`) |
 | default screens | every generated form validates with the generated zod schema; every list renders the view's columns; `axe` passes on every generated page; every interactive element has `data-testid` |
 | parity | one test per operation across REST, MCP and screen |

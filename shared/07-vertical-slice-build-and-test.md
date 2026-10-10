@@ -30,76 +30,86 @@ Phase H    Completion: tasks, sequencing, state files, handoff summary
 ```
 
 Each phase ends with a verification that must pass before the next begins.
-Never batch verification to the end. Never hand off broken work.
+Never batch verification to the end. Never hand off broken work. Check: the
+"what proves it" column of §2 is the gate for each phase, and the handoff
+gate of §3 rejects a handoff whose summary lacks the verification output.
 
 ## 2. Layer by layer, with the test for each
 
+Each row names **what you write** and **what proves it**, in terms every
+stack has. The commands, fixtures and file names belong to the language
+folders: each testing file (Python, Go, TypeScript) has a "Slice tests"
+section that maps these rows to its tools. Nothing in this section names a
+library.
+
 ### B1 — Schema or domain model
 
-| Rung | What you write | Test before moving on |
+| Rung | What you write | What proves it |
 |---|---|---|
-| Schema-driven | `schemas/<entity>.json` (audit fields, `required`, `x-*` policy) and, for reads, `views/<view>.json` | schema loads in the registry; generated Create/Update/Document models validate sample payloads; `x-owner-field` resolves; schema/collection collision test passes |
-| Classical | entity dataclass with id value object, value objects, factory, business methods, events | unit tests on factory, invariants, events raised; no framework imports (fitness test) |
+| Schema-driven | `schemas/<entity>.json` (audit fields, `required`, `x-*` policy) and, for reads, `views/<view>.json` | the registry loads the schema; the generated Create, Update and Document variants accept a valid sample payload and reject an invalid one; the owner field resolves; the schema/collection collision check passes |
+| Classical | an entity with an identity value object, value objects, a factory, business methods, events | unit tests on the factory, the invariants and the events raised; the fitness test finds no framework import |
 
 Both: the vocabulary used by the schema or enum comes from the one authority
 module, and a test pins that.
 
 ### B2 — Persistence
 
-| Rung | What you write | Test |
+| Rung | What you write | What proves it |
 |---|---|---|
-| Mongo versioned | nothing (generated `VersionedMongoCRUD`) plus index plan: `(entity_id, record_version)` unique, `deleted_at` | versioned CRUD tests against mongomock: create → v1; update → v2, new id; delete → tombstone; get after delete → None; list drops tombstones and superseded versions |
-| SQL classical | SQLAlchemy model, Alembic migration, SQL repository with defensive `_to_domain` | migration cycle upgrade → downgrade → upgrade; autogenerate produces an empty migration; every model column in the migration; every `_to_domain` field in both; repository integration test against a real DB |
+| Versioned (schema-driven) | nothing: the generated versioned repository, plus the index plan (`(entity_id, record_version)` unique, `deleted_at`) | the **repository contract suite** (`shared/03` §1) against the in-memory double and against the real adapter: create → v1; update → v2 with a new id; delete → tombstone; get after delete → none; list drops tombstones and superseded versions; latest-active before filter |
+| Relational (classical) | the table definition, a migration, a repository with defensive row→domain mapping | migration cycle up → down → up; a schema diff produces an empty migration; every column is in the migration and every mapped field is present in both; a repository integration test against a real database |
 
 A migration that misses fields blocks all further testing.
 
 ### B3 — Ports, use cases, services
 
-| Rung | What you write | Test |
+| Rung | What you write | What proves it |
 |---|---|---|
-| Schema-driven | nothing for Tier 1/2; for Tier 3, a port in `core/ports/` and a service/agent that takes it | use case tests with the port mocked or stubbed; `isinstance(impl, Port)` for every implementation; contract test over every adapter of the port |
-| Classical | repository port (ABC), primary port, commands, responses, one use case per operation | use-case unit tests with `AsyncMock(spec=Port)`: happy path, not-found, business-rule failure; domain events published |
+| Schema-driven | nothing for Tier 1/2; for Tier 3, a port in the core and a service that takes it | use-case tests with a **stub port**; every implementation satisfies the port (the stack's conformance check); the contract suite over every adapter of the port |
+| Classical | a repository port, a primary port, commands, responses, one use case per operation | use-case unit tests with a stub port: happy path, not found, business-rule failure; domain events published |
 
 ### B4 — Primary adapter
 
-| Rung | What you write | Test |
+| Rung | What you write | What proves it |
 |---|---|---|
-| Schema-driven | nothing (EndpointFactory) or a view spec; Tier 3 controller only for real actions | generated router registers; endpoint appears in `/docs` with all five operations; ownership scoping behaves (owner 200, stranger 403, missing 404) |
-| Classical | FastAPI controller with request/response models, exception → status mapping | API tests: validation, status codes, error mapping; every route has an auth mechanism |
+| Schema-driven | nothing (the generated router) or a view spec; a Tier 3 controller only for a real action | the **route table contains the five operations** (or the view) for the schema; ownership scoping behaves: owner 200, stranger 403-or-404 per the project posture (`shared/01` §5), missing 404 |
+| Classical | a controller with request and response models and the error → status mapping | API tests: validation, status codes, error mapping against `shared/01` §5; every route names its auth mechanism |
 
 ### B5 — Composition root
 
-Register the use case in the container, the router in the app, the adapter
-for any new port. **Routes added after the router has been included never
-mount**; register generated routers before handing the router to the app.
-Test: the DI container resolves the new use case; a request through the real
-app reaches the handler (this is what catches the "never mounted" class).
+Register the use case in the composition root, the router in the app, the
+adapter for any new port. **Routes added after the router has been mounted
+never serve**; register generated routes before mounting. What proves it:
+the root resolves the new use case; a request through the real app reaches
+the handler (this is what catches the "never mounted" class).
 
 ### B.5 — Registration / migration validation (BLOCKING)
 
-- Schema-driven: start the server, open `/docs`, confirm the five CRUD
-  operations (or the view) appear, exercise one by hand or by script.
-- Classical: migration cycle plus drift check, container wiring confirmed,
+- Schema-driven: boot the app, read the served OpenAPI document or route
+  table, confirm the five operations (or the view) appear, exercise one by
+  hand or by script.
+- Classical: migration cycle plus drift check, root wiring confirmed,
   controller registered.
 
 ### C — Backend test ladder
 
-1. **Unit** (`tests/unit/`): domain, models, use cases with mocked ports.
-2. **Integration** (`tests/integration/`): repository against mock/real DB;
-   API through the app; full workflow with in-memory adapters.
-3. **Architecture** (`tests/architecture/`): AST boundaries, enforcement
-   tooling agreement, collision checks, drift between siblings.
-4. **Security** (`tests/security/`): ownership invariant over **every**
-   aggregate (owner vs stranger of the same role); role matrix derived from
-   installed `require_role` calls; every resource-addressing route names its
+1. **Unit**: domain, models, use cases with stub ports.
+2. **Integration**: repository against the test double and the real
+   database; API through the app; full workflow with in-memory adapters.
+3. **Architecture**: dependency boundaries, enforcement-tooling agreement,
+   collision checks, drift between siblings, lifecycle order (`shared/01` §6).
+4. **Security**: the ownership invariant over **every** aggregate (owner
+   versus stranger of the same role); the role matrix derived from the
+   installed role gates; every resource-addressing route names its
    mechanism (role gate or ownership check).
-5. **Contract fuzz** (`tests/schemathesis/`): every generated endpoint with
-   the hex checks enabled; new generated surfaces registered here in the same
-   change; baseline is a ratchet.
-6. **Ratchet**: the architecture-drift script must not increase any gated count.
+5. **Contract fuzz**: every generated endpoint with the hex checks enabled;
+   new generated surfaces registered in the same change; the baseline is a
+   ratchet.
+6. **Ratchet**: the architecture-drift script must not increase any gated
+   count.
 
-Coverage: 80% (schema-driven app) or 100% on new code (classical). `pytest
-tests/unit tests/integration` is not "the backend passes".
+Coverage: the repository's committed threshold. Running the unit and
+integration directories alone is not "the backend passes".
 
 ### M — Agent surface (the application MCP server)
 
@@ -110,36 +120,39 @@ is half a feature: the agent cannot do what the human can.
 
 ### D — Frontend, bottom-up
 
-| Step | What you write | Test (Phase E) |
+| Step | What you write | What proves it (Phase E) |
 |---|---|---|
-| D1 generated types | nothing: the type generator → `types.ts`, `schemas.ts`, `views.ts`, `apiTypes.ts` | `codegen:check` clean; no hand-written interface duplicates a schema |
-| D2 port | `ports/I<Capability>Service.ts` (classical) or none (generated hooks) | type-checks; stub adapter satisfies it |
-| D3 adapter | `adapters/secondary/<Capability>ServiceAdapter.ts`: mapping, retry, cache, error typing | adapter tests with MSW: request shape, response mapping, error transformation |
-| D4 hook | `application/hooks/use<Capability>.ts` calling the port, or `useEntity`/`useEntityList`/`useView` | hook tests with a stub port: state transitions, calls, errors; no `apiClient` in dependency arrays |
-| D5 domain component | pure component, props only, `data-testid` on interactive elements | render with props, interactions, validation, and an `axe` assertion in every component test file |
-| D6 page | composes hooks + components; layout, routing | page test with stubbed hooks or MSW |
-| D7 route + service registration | route in the router; adapter registered in the services provider/factory | `npm run build` passes; the page is reachable |
+| D1 generated types | nothing: the type generator | the drift check (`shared/02` §1) is clean; no hand-written interface duplicates a schema |
+| D2 port | a port interface (classical) or none (the shared data hooks) | type-checks; a stub adapter satisfies it |
+| D3 adapter | the service adapter: mapping, retry, cache, error typing | adapter tests against a mocked HTTP layer: request shape, response mapping, error transformation |
+| D4 hook | an application hook calling the port, or the shared data hooks | hook tests with a stub port: state transitions, calls, errors; no client instance in a dependency array |
+| D5 domain component | a pure component, props only, a test id on every interactive element | render with props, interactions, validation, and **an automated accessibility assertion in every component test file** (this is the one statement of that rule; frontend testing files cite it) |
+| D6 page | composes hooks and components; layout, routing | page test with stubbed hooks or a mocked HTTP layer |
+| D7 route and registration | the route in the router; the adapter registered in the services provider | the production build passes; the page is reachable |
 
-Frontend coverage: 70% overall or 100% on new code; build, lint, types clean.
+Frontend coverage: the repository's committed threshold; build, lint and
+types clean.
 
 ### F — End to end
 
 1. Page objects for new pages.
 2. Happy path per persona affected.
-3. At least one **full workflow** (`test.describe.serial`) per feature:
-   register → approve → login → act.
+3. At least one **full workflow journey** per feature, run serially:
+   register → approve → login → act (this is the one statement of that
+   rule; frontend testing files cite it).
 4. Error cases.
-5. Accessibility: axe-core WCAG 2.1 AA on every new page.
-6. Browsers: chromium during development; desktop cross-browser before
-   handoff; mobile in the deploy gate.
-7. `test-map.json` updated so changed-only runs still cover the feature.
+5. Accessibility: an automated WCAG 2.1 AA check on every new page.
+6. Browsers: one engine during development; the full browser matrix before
+   handoff.
+7. The changed-only test map updated so selective runs still cover the
+   feature.
 
 ### G — Quality gate
 
-Hex boundaries clean (AST tests), API paths aligned between frontend adapters
-and backend routes, all suites green, both frontends build, no untracked
-TODOs, no skipped tests, coverage thresholds met, state files updated. Then
-PR, and the spec is not complete until CI is green.
+Hex boundaries clean (fitness tests), API paths aligned between frontend
+adapters and backend routes, all suites green, every frontend builds, no
+untracked TODOs, no skipped tests, coverage thresholds met, state files
+updated. Then PR, and the spec is not complete until CI is green.
 
 ## 3. Rules that cut across the phases
 
@@ -148,13 +161,14 @@ PR, and the spec is not complete until CI is green.
   a contradiction report; resolve or escalate. Churn starts here.
 - **The backend owns the contract.** An API path mismatch is fixed on the
   frontend adapter if the backend route is right, otherwise in the backend
-  first, never by adding a second route.
+  first, never by adding a second route. Check: Phase G's API alignment
+  check (every frontend adapter path exists in the backend route table).
 - **Schema registration before frontend.** The frontend consumes generated
   types from a backend that is proven to mount; never hand-write a type to
-  get unblocked.
-- **Fast loop during development, slow checks at handoff.** Lint and types
-  per file; one unit test file per logical unit; integration, coverage,
-  cross-browser and E2E once at handoff. If a slow check fails, drop back to
+  get unblocked. Check: the frontend drift ratchet's hand-written-interface
+  counter and the drift check (`shared/02` §1).
+- **Fast loop during development, slow checks at handoff**: the
+  verification tiers of `shared/06` §12. If a slow check fails, drop back to
   the fast loop to fix. Scope every command to the file or test in play and
   use quiet reporters; summarise results instead of pasting output.
 - **Every handoff carries evidence**: files created/modified, wiring changes,
@@ -162,8 +176,8 @@ PR, and the spec is not complete until CI is green.
   verification output. Missing summary or missing state-file update rejects
   the handoff.
 - **Checkpoints name commands and pass criteria.** "All tests pass" is not a
-  checkpoint; "`pytest tests/unit -x -q` exits 0 and coverage on new files is
-  100%" is.
+  checkpoint; "the unit suite command exits 0 with fail-fast on, and coverage
+  on new files meets the committed threshold" is.
 - **Periodic quality pass** after every two or three features: consolidate
   duplicates, align patterns, remove dead code, update docs.
 - **Code-graph gates** (`shared/12`): index fresh at session start and
@@ -186,7 +200,8 @@ occurs.
 All tasks checked; migration or registration validated; defensive conversion
 everywhere; backend unit + integration green with coverage; application MCP
 generated with parity, live-client and agent-eval tests green; frontend unit
-green with coverage; axe in every component test; builds clean; E2E in every
-browser project with a full-workflow test and a11y check; no hex violations;
+green with coverage; the accessibility assertion in every component test
+(§2 D5); builds clean; E2E across the browser matrix with the full workflow
+journey (§2 F) and the page accessibility check; no hex violations;
 API aligned; lint and types clean on both sides; CI green; progress and
 known-issues files updated.

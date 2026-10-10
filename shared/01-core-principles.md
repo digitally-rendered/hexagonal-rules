@@ -15,7 +15,7 @@ the Go framework. Language folders add idiom; they never relax these.
 4. **Frameworks stay outside.** No web framework, ORM, driver, or SDK symbol
    appears in the core. Type hints count as imports.
 5. **One composition root.** Exactly one place (DI container, `engine`,
-   `UniversalParser`, `main`) knows about both ports and the adapters that
+   a parser's root object, `main`) knows about both ports and the adapters that
    implement them. It wires at startup. Nothing else instantiates adapters.
 6. **Lazy imports in the composition root are allowed** to break cycles when
    core must reach the root for defaults; they must be function-local, with a
@@ -85,15 +85,22 @@ mapping is the same in every repo:
 | malformed request (bad JSON, bad UUID, bad query) | 400 |
 | precondition failed (`If-Match`) | 412 |
 | rate limited | 429 |
+| service unavailable (policy evaluator or a required dependency down) | 503 |
 | internal | 500 |
+
+This table is the only authority; language files cite it and add nothing.
 
 - Errors carry field-level details (`field`, `message`, `code`) where relevant.
 - A missing or tombstoned entity is **always** 404 before any hook runs. For
   an entity that exists but the caller does not own, `403` or `404` is one
-  project-wide posture; pick it once and keep it.
+  project-wide posture; pick it once and keep it. Check: the hydration test
+  requests a missing id and a tombstoned id with a recording pre-hook
+  registered, asserts 404 and asserts the hook never ran; the security suite
+  asserts the one posture over every schema.
 - Never let a missing column or field surface as a bare attribute error;
   model→domain conversion logs what was expected versus what was present, then
-  re-raises.
+  re-raises. Check: a persistence-mapping test feeds a row missing one
+  column and asserts a typed mapping error that names the expected columns.
 - Structured error bodies (RFC 7807 or an equivalent `{code, message,
   details}`) are preferred and flow through the same filters as success
   responses.
@@ -105,27 +112,65 @@ the framework is Python decorators, a Go registry, or a hand-written use case:
 
 ```
 handler override?  → yes: handler replaces everything below for that operation
+schema validation  → body against the requested version's Create/Update variant (422)
+hydration          → entity for get/update/delete; missing or tombstoned is 404
 guards             → authorization; first failure short-circuits
 validators         → cross-field / DB-backed checks the schema cannot express
-before-transforms  → normalise input
+before-transforms  → normalise input (then re-validate)
 pre_* hooks        → may abort
 service / use case → the operation
 after-transforms   → derive response fields
 post_* hooks       → side effects; MUST NOT abort; failures are logged
 ```
 
+This order is the authority; language files cite it and describe only how
+their registry is populated. Check: every stack has a **lifecycle-order
+architecture test** that runs one request through the executor with a
+recording registry (one guard, one validator, one transform, one pre hook,
+one post hook) and asserts the recorded order equals this list; the test is
+validated by swapping two steps and watching it fail. Rungs that do not
+yet pass it are recorded, dated, in `shared/05` §"Where the rungs disagree".
+
 - A **pre** hook may abort the operation with a status code. A **post** hook
   cannot: the write is already committed, so a post-hook failure is logged
   and never changes the response (ladder resolution: the framework rungs
-  win; see `shared/05`).
+  win; see `shared/05`). Check: a test registers a post hook that raises,
+  performs a create, and asserts the 2xx response is unchanged and the row
+  is committed.
 - Within **each** pipeline stage, global hooks run before schema-specific
-  hooks, then most-specific scope first, then registration order. The order
-  is per stage, not "all globals across every stage first".
+  hooks, then most-specific scope first (§6a), then registration order. The
+  order is per stage, not "all globals across every stage first".
 - A single **request context** object carries the operation, schema name,
   entity id, hydrated entity, parsed input, current user, result, pagination,
   channel, and an `extras` bag between hooks. It *is* the command.
 - Entity hydration for get/update/delete happens before hooks run; handlers
   never re-fetch. Missing entity is 404 before any hook.
+
+### 6a. Scope resolution
+
+Registrations (handlers, guards, validators, transforms, hooks, and on the
+frontend track, components) are keyed by `(schema, operation, scope)` where
+scope is a set of optional axes. The backend axes are **version** and
+**channel**; a surface may substitute one axis (the frontend track uses
+**role** in place of channel) but keeps the algorithm:
+
+| Scope declares | Specificity |
+|---|---|
+| both axes match | 4 |
+| second axis only (channel / role) | 3 |
+| first axis only (version) | 2 |
+| universal (no axis) | 1 |
+| any declared axis does not match the request | excluded |
+
+- A **handler takes one**: the single most specific match; two matches at
+  the same specificity are a registration error, never a silent pick.
+- **Hooks take all**: guards, validators, transforms and hooks run every
+  match, most specific first, then global before schema-specific, then
+  registration order.
+- Resolution is a **total, stable order**: the same registry and request
+  always produce the same sequence. Check: a property test asserts the
+  order is total and stable over generated registries and requests, and a
+  unit test asserts a non-matching axis is excluded rather than scored low.
 
 ## 7. Events
 
@@ -147,7 +192,9 @@ post_* hooks       → side effects; MUST NOT abort; failures are logged
   re-implementation of normalisation is a known defect class. Guard it with
   a test.
 - Derived identity (UUID5 from a canonical citation, content hashes) is
-  deterministic; generators never invent ids.
+  deterministic; generators never invent ids. Check: a determinism test
+  mints twice from the same input and asserts equality, and the fitness
+  test finds the minting function called from one module only.
 
 ## 9. The tier test
 
@@ -162,13 +209,22 @@ Before writing code, ask which tier it belongs to:
 **The test:** delete the business logic (or the UI behaviour). If only
 fetch–filter–serialize (or fetch–map–render) remains, it is Tier 1 or 2 and
 must not be hand-written. Tier 3 code that uses the framework adds zero
-violations; boilerplate that bypasses it fails CI.
+violations; boilerplate that bypasses it fails CI. This section is the one
+statement of the tier test; language files cite it.
+
+A default screen produced by the frontend track (a design; status in
+`shared/13` §2a) is Tier 1/2 output: it is generated, never hand-written. A
+registered override of such a screen is Tier 3. Until the track ships,
+screens are hand-written Tier 3 code over the generated types and shared
+data hooks.
 
 ## 10. Contracts beat purity
 
 Preserving an existing response shape, path, or test contract always beats
 architectural tidiness. Refactor behind the contract; change the contract
-deliberately and with its consumers.
+deliberately and with its consumers. Check: the OpenAPI baseline snapshot
+(no path or method removed, no new required field) fails on a contract
+change that does not refresh the snapshot in the same commit.
 
 ## 11. One authority per vocabulary
 

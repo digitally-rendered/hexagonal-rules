@@ -4,9 +4,10 @@ Every project on the ladder carries two indexes that agents and people
 query through MCP instead of grepping: a **code graph** (symbols, calls,
 imports, execution flows, API routes, cross-repo contracts) and a
 **document index** (docs, specs, vaults, PDFs, generated artifacts). The
-code graph is GitNexus. The document index is the project's text index
-(the `textindex` pattern of `second-brain/01` §7) or Infigraph where it is
-installed; both expose read-only MCP tools.
+code graph is GitNexus ([project repository](https://github.com/abhigyanpatwari/GitNexus)).
+The document index is a document-index MCP server built to the pattern of
+`second-brain/01` §7 (`<document-index-module>` placeholder in
+`templates/mcp-project.json`); both expose read-only MCP tools.
 
 ## 1. Why an index, and why it must be fresh
 
@@ -22,12 +23,14 @@ installed; both expose read-only MCP tools.
 
 ## 2. Setup per project
 
-1. **Install once per machine**: GitNexus as a global binary (pin the
-   version); register it as a user-scope MCP server
-   (`templates/mcp-servers.json`). Projects do not add it to their own
-   `.mcp.json`; the global registry (`~/.gitnexus/registry.json`) routes
-   requests by repo.
-2. **Index the repo**: `npx gitnexus analyze` from the project root (add
+1. **Install once per machine**: GitNexus as a global binary; pin the
+   installed version in the project's tooling manifest so every contributor
+   and CI runner indexes with the same version; register it as a user-scope
+   MCP server (`templates/mcp-servers.json`). Projects do not add it to
+   their own `.mcp.json`; the global registry (`~/.gitnexus/registry.json`)
+   routes requests by repo. Always invoke the installed `gitnexus` binary,
+   never `npx` (step 5).
+2. **Index the repo**: `gitnexus analyze` from the project root (add
    `--embeddings` when semantic search is wanted; multi-minute on large
    trees, run in the background). It writes `.gitnexus/` and the managed
    block in `CLAUDE.md` / `AGENTS.md`.
@@ -41,6 +44,10 @@ installed; both expose read-only MCP tools.
    session; it parses the tool call as JSON on stdin with Python in isolated
    mode and never evaluates the command text
    (`templates/settings-hooks.json`, `templates/gitnexus-reindex-hook.sh`).
+   The hook captures stdin before handing it to Python (a heredoc would
+   replace it and the hook would silently never fire);
+   `templates/test-reindex-hook.sh` proves both the positive and the negative
+   case with a stub binary and runs after any change to the hook.
 5. **Allow the commands**: project settings pre-approve the locally
    installed `gitnexus status|analyze|list` binary with exact subcommands
    and the read-only single-repo tools (`templates/settings-permissions.json`).
@@ -51,9 +58,10 @@ installed; both expose read-only MCP tools.
    group whose every member may be exposed to the session.
 6. **Add the skills**: copy the `gitnexus-*` skill family and
    `reindex-check` (`shared/11` §1) into `.claude/skills/`.
-7. **Document index**: register the project's read-only text-index MCP
-   server (or Infigraph) at project scope in `.mcp.json`, opened read-only,
-   scoped to the audience the session may see (`shared/08` §4).
+7. **Document index**: register the project's read-only document-index MCP
+   server at project scope in `.mcp.json` (`templates/mcp-project.json`),
+   opened read-only, scoped to the audience the session may see
+   (`shared/08` §4).
 8. **Multi-repo products**: define a GitNexus **group** over the member
    repos (backend, frontends, shared packages, the second-brain record) so
    contracts (HTTP routes, topics, tool definitions) are cross-linked and
@@ -62,17 +70,20 @@ installed; both expose read-only MCP tools.
 
 ## 3. The managed block in `CLAUDE.md`
 
-`npx gitnexus analyze` rewrites everything between the
+`gitnexus analyze` rewrites everything between the
 `<!-- gitnexus:start -->` and `<!-- gitnexus:end -->` markers. Never put
 project notes inside the markers; put them above or below. The block states
 the Always/Never rules below and the resource and skill tables
-(`templates/claude-gitnexus-block.md` is the reference copy).
+(`templates/claude-gitnexus-block.md` is the reference copy). The text the
+tool itself generates may say `npx gitnexus analyze`; what runs in a session
+is the pre-approved installed binary (`templates/settings-permissions.json`),
+and the reference copy says `gitnexus analyze` for that reason.
 
 ## 4. Rules
 
 **Always**
 
-- Run `reindex-check` (or `npx gitnexus status`) at session start before
+- Run `reindex-check` (or `gitnexus status`) at session start before
   editing existing symbols, after pull/merge/checkout, after a commit that
   adds, removes or renames symbols, and before any multi-commit refactor.
   Cross-check the indexed SHA against `HEAD`; a fresh status with a
@@ -139,18 +150,23 @@ the Always/Never rules below and the resource and skill tables
 ## 7. The document index
 
 - Everything that is not code (specs, steering, ADRs, research, vault
-  notes, generated docs, PDFs) is indexed by the document indexer, exposed
-  as read-only MCP tools (`count`, `search`, `show`, `similar`, `stats`),
-  opened `mode=ro`, rebuilt non-destructively with a shrink guard and
-  history (`second-brain/01` §7).
+  notes, compiled wiki pages, generated docs, PDFs) is indexed by the
+  document indexer, exposed as read-only MCP tools (`count`, `search`,
+  `show`, `similar`, `stats`), opened `mode=ro`, rebuilt non-destructively
+  with a shrink guard and history (`second-brain/01` §7). The indexer is
+  the project's own module (a full-text index with optional local
+  embeddings, one adapter per source type); the rules name the role, not
+  an implementation, and `templates/mcp-project.json` registers it through
+  the `<document-index-module>` placeholder.
 - Search the index, not grep: count, facet, search, then show with a
   pattern. Every hit carries a citation the original can reproduce.
 - Audience scoping is a hard limit on the server, not a filter per query;
   register one server per audience when sessions differ in what they may
   see.
-- Where Infigraph is used it indexes the document corpus (vault, filings,
-  generated docs) alongside the text index; its MCP tools follow the same
-  read-only, cited, audience-scoped rules.
+- A second document-index server over another corpus (a vault, a
+  produced-artifact set, generated docs) follows the same read-only, cited,
+  audience-scoped rules and is registered as another entry of the same
+  shape.
 
 ## 8. Enforcement
 
@@ -160,5 +176,6 @@ the Always/Never rules below and the resource and skill tables
 | impact before symbol edit, detect_changes before commit | stated in the managed block; the review agent checks the handoff summary names the impact report |
 | no notes inside the managed block | a test greps for non-generated lines between the markers |
 | `.gitnexus/` ignored | `.gitignore` entry checked by the repo scaffold |
-| hook present | user-scope `settings.json` contains the reindex hook pointing at `~/.claude/hooks/`; no project settings file defines a hook |
+| hook present and firing | user-scope `settings.json` contains the reindex hook pointing at `~/.claude/hooks/`; no project settings file defines a hook; `templates/test-reindex-hook.sh` passes (stub binary called for a HEAD-moving git command, not called otherwise) |
+| installed binary, pinned | the permission allowlist names `gitnexus <subcommand>` only (no `npx`, no wildcard); the tooling manifest pins the version |
 | document index read-only | MCP server env opens the database `mode=ro`; a test asserts the server has no write tools |

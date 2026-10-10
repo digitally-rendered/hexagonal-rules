@@ -9,8 +9,13 @@
 # inspected by a JSON parser, never evaluated. Python runs in isolated mode
 # (-I) so a module planted in the repository (json.py, re.py) cannot be
 # imported in place of the standard library.
+#
+# stdin is captured first and piped to Python: a heredoc would replace the
+# hook's stdin, so the payload would never be read (templates/test-reindex-hook.sh
+# is the regression test for exactly that).
 set -eu
-should_reindex="$(python3 -I - <<'PY'
+payload="$(cat)"
+should_reindex="$(printf '%s' "$payload" | python3 -I -c '
 import json, re, sys
 try:
     payload = json.load(sys.stdin)
@@ -20,8 +25,7 @@ if payload.get("tool_name") != "Bash":
     print("no"); sys.exit(0)
 cmd = str(payload.get("tool_input", {}).get("command", ""))
 print("yes" if re.search(r"\bgit\s+(commit|merge|checkout|switch|pull|rebase)\b", cmd) else "no")
-PY
-)"
+')"
 if [ "$should_reindex" = "yes" ] && command -v gitnexus >/dev/null 2>&1; then
   gitnexus analyze >/dev/null 2>&1 || true
 fi

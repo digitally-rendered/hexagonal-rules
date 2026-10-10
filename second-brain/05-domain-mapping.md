@@ -87,7 +87,10 @@ Every source document, form, schema or dataset gets a **bindings file**:
 - Field identity is a stable address (document id + version + cell or
   control path), never the label text; labels are recorded for humans.
 - Manual **overrides** live in one overrides file consulted by the index,
-  so a correction survives regeneration.
+  so a correction survives regeneration. Each override row cites the field
+  addresses and item ids that justified it and carries `recorded`; lint marks
+  a row stale when a cited source version is superseded; the write is a
+  `curate` op in the log (`second-brain/01` §11).
 
 ## 5. Indexes, convergence and reverse mapping
 
@@ -99,7 +102,7 @@ Every source document, form, schema or dataset gets a **bindings file**:
   in N sources, it is one domain attribute. This is what lets a value be
   captured once and used everywhere (answer once, fill many), and what
   turns per-source dedup into a cross-source concept map. Conflation of
-  distinct roles (`party.name` versus `party.advisor.name`) is the bug the
+  distinct roles (`party.name` versus `party.representative.name`) is the bug the
   role qualifier exists to prevent.
 - **Reverse mapping (prefill)** takes `object.role.property` keys
   (three-part when roles collapse variants into one object) and emits the
@@ -175,7 +178,7 @@ auto-fill.
 | resolution | one resolver (AST sweep for a second normaliser); unmapped mentions listed |
 | registry | normalisation cases; share of concept groups driven by the registry measured |
 | model | every property has a type and cardinality; every object has system mappings or an explicit "no equivalent" |
-| bindings | partition sums to field count; proposals never written into accepted bindings; overrides survive regeneration |
+| bindings | partition sums to field count; proposals never written into accepted bindings; overrides survive regeneration; every override row cites its sources and `recorded`, and a superseded source marks it stale on the next lint |
 | convergence | the same `object.property` across N sources resolves to one attribute; role qualifiers prevent conflation |
 | prefill | reverse coverage report; round-trip field → model → field is identity for bound fields |
 | contracts | every cross-structure reference has a contract row and a test; the reviewer reports literal violations |

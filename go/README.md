@@ -8,7 +8,7 @@ layout enforce what the Python rungs enforce with lint and AST tests.
 |---|---|
 | `01-go-hexagonal.md` | package levels, ports, decorators, container, function registry, events, errors, engine, codegen |
 | `02-conventions.md` | interfaces, errors, context, options, naming, packages, middleware, concurrency, lint |
-| `03-testing.md` | table-driven tests, build tags, `sdtest`, golden files, event capture |
+| `03-testing.md` | table-driven tests, build tags, `sdtest`, golden files, event capture, slice tests |
 | `04-ddd-ports-adapters.md` | the classical hexagon in Go |
 | `05-pipeline-and-ai-harness.md` | plugin ensemble, ingestion lifecycle and AI harness in Go |
 | `06-privacy-implementation.md` | the eight privacy layers in Go |

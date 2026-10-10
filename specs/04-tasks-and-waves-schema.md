@@ -70,10 +70,12 @@ phase needs that the previous produced).
 - A checkpoint is a task: `N. Checkpoint — <phase> complete`, with the exact
   commands, the pass criteria ("all of: …"), and the instruction to ask the
   user before touching anything irreversible or high-blast-radius.
-- Hard gates are checkpoints the sequencing and tracker name explicitly:
-  migration upgrade → downgrade → upgrade plus drift check; login E2E green
-  on an encrypted table; all routing personas unchanged; no real PII
-  before encryption. Nothing after a hard gate starts until it is proven.
+- Hard gates are checkpoints the sequencing and tracker name explicitly,
+  each a command with a pass criterion: for example "migration cycle green"
+  (upgrade → downgrade → upgrade plus drift check), "authentication E2E
+  green on an encrypted store", "no real personal data stored before the
+  encryption gate passes". Nothing after a hard gate starts until it is
+  proven.
 - A checkpoint is its own wave.
 
 ## 4. Dependency graph and waves

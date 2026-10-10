@@ -3,7 +3,7 @@
 The Level 1 rung in TypeScript: the plugin ensemble, the staged ingestion
 lifecycle (`shared/09`), the AI harness (`shared/10`) and the operating
 skills (`shared/11`). Mirrors `python/03-plugin-pipeline.md`. Stack assumed:
-Node ≥ 20 (worker threads or a job queue for parallelism), TypeScript strict,
+Node floor per `typescript/README` (worker threads or a job queue for parallelism), TypeScript strict,
 Zod + Ajv, `better-sqlite3` for the run store, Pino, Vitest, an
 OpenAI-compatible HTTP client for model servers, the provider SDK or a CLI
 wrapper for judges.
@@ -17,7 +17,7 @@ wrapper for judges.
 | Services | `domain/services/` | `DocumentParsingService`, `ConflictResolutionService`, `FieldEnrichmentService` |
 | Adapters | `adapters/` | readers (fs, S3, HTTP), plugin repository, LLM adapters (local server, hosted API, CLI judge), prompt layout and manifest, schema storage |
 | Plugins | `plugins/{extraction,detection,validation,enrichment}/` | strategies |
-| Composition root | `core/parser.ts` (`UniversalParser`), CLI | wires ports to adapters |
+| Composition root | `core/parser.ts` (`<Entity>Parser`), CLI | wires ports to adapters |
 | Pipeline | `pipeline/` | build drivers, stage cache, run store, provenance, gate records, miss log |
 | Validation | `validation/` | orchestrator, judges, rubric, findings, source index |
 

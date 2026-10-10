@@ -79,17 +79,23 @@ requirements; checkpoints name the commands that prove them.
 
 ## 4. Hooks
 
-| Hook | Trigger | Does |
-|---|---|---|
-| `hexagonal-architecture-review` | on change of `**/*.py` | checks core→adapter, adapter→adapter imports, logic in adapters |
-| `schema-registration-reviewer` | on change of `schemas/*.json` | audit fields, `title`, `version`, valid types, naming |
-| `frontend-test-runner` | on change of `frontend/src/**/*.{ts,tsx}` | runs the co-located test, checks `data-testid`, flags stale library patterns |
-| `python-coverage-reviewer` | manual | three lowest-coverage modules and the most impactful test to write |
-| `update-state-files` | agent stop / manual | update `progress.md` and `known-issues.md` before ending |
-| `execute-next-spec` | manual | read state and sequencing, pick the next incomplete spec, start the lifecycle |
+Hooks are tool-neutral: each is a prompt with a trigger (a glob, a manual
+invocation or agent stop) and a stated check. The set below is the one
+every project carries; the names are roles, and the globs are the project's
+own.
 
-A hook is a prompt with a trigger and a glob; it is the authoring-time rung
-of the enforcement ladder for agents, not a substitute for CI checks.
+| Hook role | Trigger | Does |
+|---|---|---|
+| architecture review | on change of `<backend source glob>` | checks layer imports (core → adapter, adapter → adapter) and logic in adapters against the per-language fitness rules |
+| schema registration review | on change of `<schema file glob>` | audit fields, `title`, `version`, valid types, naming (`shared/02`) |
+| frontend test runner | on change of `<frontend source glob>` | runs the co-located test, checks test ids, flags stale library patterns |
+| coverage review | manual | the lowest-coverage modules and the most impactful test to write |
+| state-file update | agent stop / manual | update `progress.md` and `known-issues.md` before ending |
+| next-spec execution | manual | read state and sequencing, pick the next incomplete spec, start the lifecycle |
+
+A hook is the authoring-time rung of the enforcement ladder for agents, not
+a substitute for CI checks; every hook names the CI check that catches what
+it missed.
 
 ## 5. Invariants of the system
 
@@ -110,9 +116,10 @@ of the enforcement ladder for agents, not a substitute for CI checks.
 5. **One authority per fact.** Sequencing owns phases; the tracker owns
    remediation state; the handoff JSON mirrors the tracker and loses when they
    disagree; `progress.md` owns session state.
-6. **Checkpoints are blocking.** A hard gate (migration cycle, login E2E on an
-   encrypted table, persona routing unchanged) stops the wave sequence until
-   proven, and asks the user before anything irreversible.
+6. **Checkpoints are blocking.** A hard gate (for example "migration cycle
+   green" or "authentication E2E green on an encrypted store") stops the
+   wave sequence until proven, and asks the user before anything
+   irreversible.
 7. **Existing code is inventoried before design.** An `EXISTING_CODE_INVENTORY`
    or "What Already Exists" section prevents re-implementing shipped work and
    names what is to be removed.

@@ -32,22 +32,24 @@
   `webkit`, `mobile-chrome`, `mobile-safari`. Browser projects ignore
   `api.*.spec.ts`. Admin specs are tagged `@admin` and filtered with
   `--grep`/`--grep-invert`.
-- **One runner script** (`run-tests.sh -t <suite> -b <browser> -e <env>`)
-  loads the env file, checks service health, and maps flags. Never call
-  `npx playwright test` with hardcoded project flags.
+- **One runner script** loads the env file, checks service health, and maps
+  the suite, browser and environment it is given to the runner's project
+  flags. Never call the test runner directly with hardcoded project flags;
+  a CI step greps workflows and scripts for a direct runner invocation and
+  fails on a hit.
 - **URLs are config, not code.** `test.config.ts` reads `BASE_URL`,
   `API_URL`, `ADMIN_URL` from env and fails fast. No `|| 'http://…'`
   fallbacks in spec files.
 - Every spec includes at least one full user journey using
-  `test.describe.serial` (register → approve → login → act), not only page
+  `test.describe.serial` (the full-workflow journey of `shared/07` §2), not only page
   tests.
 - Every new page has an axe-core WCAG 2.1 AA check in its E2E spec.
 - `test-map.json` maps source globs to specs for `--changed-only`; an unmapped
   changed file runs everything (exit 2 safety net). Add mappings with every
   new spec or source path.
-- Doc specs (`*.doc.spec.ts`, Test2Doc) generate documentation and do not
-  replace E2E coverage; a doc-coverage gate asserts each required doc spec
-  exists and collects ≥ 1 test.
+- Doc specs (`*.doc.spec.ts`, run through a documentation generator)
+  generate documentation and do not replace E2E coverage; a doc-coverage
+  gate asserts each required doc spec exists and collects ≥ 1 test.
 
 ## 4. CI tiers
 

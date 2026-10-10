@@ -66,7 +66,7 @@ rung 1 compensates for an API that still permits the mistake.
 
 | Rule | Why absolute |
 |---|---|
-| Never skip, xfail, or weaken a test | a skipped test looks like coverage and is not |
+| Never skip, xfail, or weaken a test | a skipped test looks like coverage and is not (the one Class B exception is the environment-probed optional dependency row below; nothing else) |
 | Core must not import adapters | re-couples the domain to infrastructure; use a port |
 | Never commit secrets | — |
 | Identity is minted/compared/resolved by one function each | local normalisation silently forks identity |
@@ -83,6 +83,7 @@ change it deliberately; do not disable it locally.
 | No adapter cross-imports | a time-boxed migration step naming the port that will replace it |
 | Use a view spec, not a controller | the response shape cannot be reproduced and changing it breaks a contract |
 | Case conversion in the mapping layer | a third-party payload the codegen does not own |
+| Never skip a test | **the single skip exception**: an integration test whose optional dependency (a container runtime, a database server, a browser binary) is absent, detected by an **environment probe** at collection time, skipped with a reason string naming the dependency. The same test runs unskipped in the CI job that provides the dependency. Not legitimate: a skip for a failing assertion, a flaky case, or a missing required dependency. Language testing files cite this row and do not restate it. Check: the no-skip grep allows only the probe helper; a CI job runs the integration project with the dependency present and asserts zero skips |
 
 Not legitimate: "it was faster", "I don't know how the framework works", "the
 check was annoying", "I'll clean it up later".
@@ -109,6 +110,19 @@ check was annoying", "I'll clean it up later".
 3. State the rule in the rules file **and name the check**, so the reader gets
    a fast failing signal instead of prose.
 4. Prefer the strongest practical rung.
+
+### 6a. This repository lints its own rules
+
+A rule file is held to the standard it imposes. Every line in `shared/`,
+the language folders and `specs/` that states a rule with MUST, MUST NOT,
+`never` or `always` MUST have, in the same bullet, table row or section, a
+check: a sentence beginning `Check:` or `Enforced by`, a named test, lint
+rule, ratchet counter or gate command, or a test table the section ends
+with. A rule that cannot yet name its check is written as SHOULD until a
+check exists (CLAUDE.md). Enforced by `tools/check_rules.py`, which walks
+the markdown headings and bullets, reports every unaccompanied MUST line
+with its file and line, and exits non-zero on any; it runs in pre-commit
+and CI for this repository.
 
 ## 7. Security scanning (same three-tier shape)
 

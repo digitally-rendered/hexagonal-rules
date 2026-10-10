@@ -82,7 +82,7 @@ any report that relies on it.
 | `first_date`, `last_date`, duration | threads, episodes, projects | "how long has"; always re-dated by searching older sources before stating "first appears" |
 | gap-day segmentation (default 21 quiet days) | episodes | one topic over one stretch of time; the parameter is in the manifest |
 | sequence index | steps within an episode | order within a day; tie-break by item id and offset |
-| `timeline_type ∈ {lifecycle, proceeding_step, deadline, communication, document, offer, mediation_stage, custom}` | timeline events | typed chronology for the bundle |
+| `timeline_type ∈ {lifecycle, deadline, communication, document, custom}` plus the active profile's additions (§9) | timeline events | typed chronology for the bundle |
 | deadlines and standing obligations | review-cycle config | computed status, flagged at 21 and 7 days |
 | validity interval (`recorded`, `superseded_at`) | fact rows | which value was current when |
 | delays | derived | request → refusal → reversal or adoption, in days; averages and worst cases reported with their population |
@@ -101,12 +101,12 @@ emails versus report timestamps) before any delay is computed.
 | actor resolution | explicit, from context (I/you/we from the header), `guess` (unresolved pronoun) | step; `guess` steps are kept in analysis but left out of notes |
 | direction | `from`, `to`, `both` | item, step |
 | audience, privilege, privilege basis | the one classifier | every node |
-| verdict | `verified, client_account, contradicted, partial, not_found` | claim, fact |
+| verdict | the enum defined in `01` §5 | claim, fact |
 | polarity | `supports, contradicts, cuts_against` | claim → item edge |
 | status | `open, received, not_applicable, closed` | tracker, gap |
 | final vs draft | catalogue | document |
 | sensitivity | flag with reason | item |
-| curation | `curated: true`, `curator_note`, merged-from ids | topic, episode |
+| curation | `curated: true`, `curator_note`, merged-from ids, `cites[]` (the item ids that justified it), `recorded`, `stale` (set by lint) | topic, episode |
 
 Logical tags are either deterministic (headers, hashes, the classifier) or
 **proposed** (topic discovery, sentence parsing, model descriptions) and
@@ -133,6 +133,9 @@ priorities) belong to the logic-axis surface in `05` §7.
   ledger, code, design) into one log; events are sections per episode.
 - Curation keys are stable (`topic key`, `episode id`), so curation survives
   rebuilds; a merged episode unions items, steps and handoffs and sorts them.
+  A curation row without `cites[]` and `recorded` is rejected; lint marks a
+  row `stale` when a cited item is superseded and lists it in the hand-off;
+  every curation write is a `curate` op in the log (`01` §11).
 - Accuracy is measured before summaries are trusted: a random sample of
   parsed steps with a blank correct column is reviewed by a person and the
   rate recorded with the analysis manifest.
@@ -196,9 +199,10 @@ Counting is where derived analysis earns trust or loses it. Rules:
 | temporal | dates carry source and precision; episodes are contiguous and non-overlapping per topic; delays recompute from rows |
 | logical | action vocabulary closed; negated consent → refuse; `guess` steps excluded from notes |
 | citations | every fact, claim, step and handoff resolves to an item locator |
-| curation | merges and drops are idempotent across rebuilds; stable keys |
+| curation | merges and drops are idempotent across rebuilds; stable keys; every row cites item ids and `recorded`; superseding a cited item makes the next lint mark the row stale; each write is a `curate` log row |
 | audience | an episode shows only items the vault's audience holds; omitted when fewer than two |
 | accuracy | a reviewed sample and its rate are recorded in the analysis manifest |
+
 ## 9. Profiles: per-domain vocabularies
 
 The graph is fixed; the vocabularies that fill two of its columns are
@@ -206,7 +210,7 @@ profile configuration, drawn from the one vocabulary module and versioned:
 
 | Profile | Event classes (steps) | Actor roles |
 |---|---|---|
-| communications / dispute | request, consent, refuse, inform, schedule, pay, cancel, propose, decide, accuse | owner, own advisor, other side, neutral professional, provider |
+| communications / dispute | request, consent, refuse, inform, schedule, pay, cancel, propose, decide, accuse | owner, accountable professional, counterparty, neutral professional, provider |
 | product / engineering | propose, decide, implement, review, merge, release, revert, report | author, reviewer, owner, customer, vendor |
 | research | claim, cite, support, contradict, replicate, retract | author, source, reviewer, editor |
 | finance / operations | order, deliver, invoice, pay, refund, dispute, reconcile | buyer, seller, bank, auditor |
@@ -214,4 +218,17 @@ profile configuration, drawn from the one vocabulary module and versioned:
 A step's class is one value from the active profile; cross-profile
 analysis maps classes to the shared super-classes `ask, agree, decline,
 inform, commit, undo, judge`.
+
+Two further vocabularies take a neutral core plus profile additions:
+
+| Profile | `timeline_type` additions (core: `lifecycle, deadline, communication, document, custom`) | `asserted_by` additions (core: `participant, counterparty, professional, authority, document`, `01` §5) |
+|---|---|---|
+| communications / dispute | `procedure_step`, `proposal`, `facilitation_stage` | `representative` |
+| product / engineering | `release`, `incident`, `decision` | `customer`, `vendor` |
+| research | `publication`, `embargo`, `retraction` | `source`, `reviewer` |
+| finance / operations | `period_close`, `settlement`, `audit_visit` | `bank`, `auditor` |
+
+Check: the vocabulary module composes core plus the active profile's
+additions, validators reject a value from another profile, and a test
+asserts no profile value appears as a literal in code.
 

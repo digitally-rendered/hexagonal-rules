@@ -5,7 +5,10 @@ components are the entities, hooks are the use cases, port interfaces define
 the boundary, and pages and service adapters are the primary and secondary
 adapters. Files 06–11 are the Node backend: the schema-driven framework
 ([Syntact](https://github.com/digitally-rendered/Syntact), in flight), its testing and performance standards, and
-the classical, pipeline and privacy rungs in TypeScript.
+the classical, pipeline and privacy rungs in TypeScript. Files 12–13 are
+the **frontend track**: designs, not shipped frameworks, for generating
+default screens from the OpenAPI document and for a schema-driven design
+system; their status line is `shared/13` §2a.
 
 | File | Source |
 |---|---|
@@ -20,8 +23,11 @@ the classical, pipeline and privacy rungs in TypeScript.
 | `09-node-ddd-ports-adapters.md` | port of `python/01` |
 | `10-node-pipeline-and-ai-harness.md` | port of `python/03` and `shared/09`–`11` |
 | `11-privacy-implementation.md` | port of `shared/08` |
+| `12-generated-frontend.md` | design: the two schema-driven application frontends and the backends' OpenAPI emission |
+| `13-design-system-and-figma.md` | design: the design-token practice of the application sources |
 
 Frontend stack: React 18/19, TypeScript strict, Vite, MUI (v7 where noted),
 React Router, React Hook Form + Zod, Vitest + Testing Library, MSW,
-Playwright. Backend stack: Node ≥ 22 (and Bun), Hono or Fastify, Ajv,
+Playwright. Backend stack: **Node ≥ 22** (and Bun) — the Node floor is
+stated here only; the other files say "see README" — Hono or Fastify, Ajv,
 Mongo driver or Kysely, pino, Vitest, fast-check, dependency-cruiser.

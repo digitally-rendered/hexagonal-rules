@@ -4,7 +4,11 @@
 
 - **Never skip.** `@pytest.mark.skip`, `pytest.skip()`, `@pytest.mark.xfail`
   are forbidden. Never comment out a test or assertion. Never `# type:
-  ignore` a failing test. Never weaken an assertion to go green.
+  ignore` a failing test. Never weaken an assertion to go green. The single
+  exception is the Class B row of `shared/04` §5: an environment probe for
+  a missing optional integration dependency (`pytest.skip(reason=…)` inside
+  the probe helper only), which the CI job providing the dependency runs
+  unskipped.
 - A failing test has three resolutions: fix the code, fix the test, or
   escalate. There is no fourth.
 - The ratchet counts `skipped_tests`; target 0.
@@ -84,6 +88,23 @@ schemathesis and architecture directories are collected only by a bare
 
 ## 7. Verification protocol
 
-Tier 1 lint+types per file → Tier 2 unit → Tier 3 full suite with coverage →
-Tier 4 handoff (coverage threshold, generated endpoints visible in `/docs`,
-state files updated, `grep -r "skip\|xfail" tests/` finds nothing new).
+The tiers are `shared/06` §12. Python commands per tier: ruff and mypy on
+the changed file (Tier 1); `poetry run pytest <file>` (Tier 2); bare
+`poetry run pytest` with coverage (Tier 3); the handoff checks plus
+generated endpoints visible in `/docs` and `grep -r "skip\|xfail" tests/`
+finding nothing new (Tier 4).
+
+## 8. Slice tests (the Python equivalents of `shared/07` §2)
+
+| `shared/07` row | What proves it in Python |
+|---|---|
+| B1 schema | `SchemaRegistry` loads `schemas/<entity>.json`; the generated Create/Update/Document models validate a sample payload and raise `ValidationError` on an invalid one; `get_owner_field` resolves; the schema/collection collision test passes |
+| B1 classical | dataclass entity, value objects, factory: unit tests on factory, invariants, `_events`; the AST fitness test finds no framework import |
+| B2 versioned | the versioned CRUD contract tests against `mongomock-motor`: create → v1; update → v2, new `id`; delete → tombstone; `get` after delete → `None`; `list_latest_active` drops tombstones and superseded versions |
+| B2 relational | SQLAlchemy model + Alembic migration: upgrade → downgrade → upgrade; `alembic revision --autogenerate` produces an empty migration; every column in the migration and every `_to_domain` field in both; repository integration test against testcontainers |
+| B3 ports | use-case tests with `AsyncMock(spec=Port)`; `isinstance(impl, Port)` for every implementation of a `runtime_checkable` Protocol; the contract test over every adapter |
+| B4 primary adapter | the generated router registers; the endpoint appears in `/docs` with all five operations (or the view); owner 200, stranger 403 (this application's posture), missing 404 |
+| B5 composition root | the container resolves the new use case; a request through the real app reaches the handler (routes added after `include_router` never mount) |
+| C ladder | `tests/unit`, `tests/integration`, `tests/architecture`, `tests/security`, `tests/schemathesis`, the drift ratchet; coverage at the repository's committed threshold |
+| D frontend (the schema-driven application's React side) | the type-generation script re-run and diffed (the drift check, `shared/02` §1); adapter tests with MSW; hook tests with a stub port and no `useApiClient()` in a dependency array; an `axe` assertion in every component test file; `npm run build` passes |
+| F end to end | Playwright: page objects; one `test.describe.serial` full workflow journey per feature; axe-core WCAG 2.1 AA per new page; `test-map.json` updated for changed-only runs |

@@ -20,7 +20,7 @@ pkg/engine/          composition root: config → driven adapters → services �
 pkg/codegen/         JSON Schema → Go structs, repositories, services, handlers, overrides, OpenAPI, SDK
 pkg/config/          YAML + STELLAR_* env overrides
 pkg/mcp/             developer MCP server (schema, query, codegen tools; not deployed)
-pkg/adapter/driving/mcp/  generated application MCP server: <schema>_<op> and use-case tools, resources, prompts; RequestContext channel=mcp (shared/13)
+pkg/adapter/driving/mcp/  (design, shared/13 §2a; not in the framework today) generated application MCP server: <schema>_<op> and use-case tools, resources, prompts; RequestContext channel=mcp
 pkg/testing/sdtest/  MemoryRepository, TestEngine, DataGenerator, LifecycleRunner, event capture
 internal/            private utilities (stringutil, timeutil, jsonutil, ctxkey); not importable externally
 cmd/                 Cobra commands: run, generate, init, schema, migrate, mcp
@@ -29,6 +29,8 @@ cmd/                 Cobra commands: run, generate, init, schema, migrate, mcp
 **Golden rule:** `pkg/core/**` never imports `pkg/adapter/**`. Something that
 needs both puts the interface in `core/port/` and the implementation in
 `adapter/driven/`.
+
+Check: `go vet ./...` with the build-order levels of §2 fails the build when a core package imports an adapter; the import-boundary test in `go/03` asserts it.
 
 ## 2. Build-order levels (no cycles)
 
@@ -50,7 +52,12 @@ A package imports only lower levels. `go vet ./...` verifies.
 - `port.Repository` (driven): `Create`, `FindByID`, `List`, `Update`,
   `Delete`, `BulkCreate`, `BulkUpdate`, `BulkDelete`, `EnsureIndexes`. All
   methods take `ctx` first and are schema-scoped by `schemaName`. `FindByID`,
-  `Update`, `Delete` return a `NotFound` domain error.
+  `Update`, `Delete` return a `NotFound` domain error. The port does not yet
+  expose version history; the `<entity>_history` tool and `/_history` route
+  of `shared/13` §2 apply to this rung only once a `History(ctx, schemaName,
+  entityID)` method is added to the port, to every `adapter/driven/*`
+  repository and to `sdtest.MemoryRepository` in the same change (§11), with
+  the contract suite's history case.
 - `port.Service` (driving): the same surface; validates against the schema,
   fires pre/post events, applies policy, delegates to the repository.
 - Other ports: `EventBus`, `WebhookDispatcher`, `PolicyEvaluator`,
@@ -79,17 +86,29 @@ A package imports only lower levels. `go vet ./...` verifies.
 | Kind | Signature | Effect |
 |---|---|---|
 | Handler | `func(w http.ResponseWriter, r *http.Request)` | bypasses the whole pipeline for that op |
-| Guard | `func(ctx, r *http.Request) error` | first error denies |
-| Validator | `func(ctx, schemaName, data map[string]any) error` | before JSON Schema validation; error aborts |
+| Guard | `func(ctx, r *http.Request) error` | first error denies (403) |
+| Validator | `func(ctx, schemaName, data map[string]any) error` | custom cross-field or store-backed check, run **after** JSON Schema validation; error aborts (422) |
 | Transform | `func(ctx, schemaName, data) (map[string]any, error)` | output replaces input; chained |
 
-- Registered per `(schemaName, Operation, Scope{Version, Channel})`.
-- **Specificity scoring**: version+channel = 4, channel = 3, version = 2,
-  universal = 1; a non-matching constraint scores −1 and is excluded.
-  Handlers resolve to the single most specific; guards/validators/transforms
-  resolve to all matches ordered most → least specific.
-- Pipeline: handler override → guards → validators → transforms → service.
-  When a handler resolves, guards for the same op are bypassed; call
+- Registered per `(schemaName, Operation, Scope{Version, Channel})`. Scope
+  resolution is `shared/01` §6a with the axes **version** and **channel**;
+  `FunctionRegistry` implements that scoring and nothing else: handlers take
+  the single most specific match, guards/validators/transforms take every
+  match most → least specific. Check: the registry's property test
+  (resolution is a total stable order; a non-matching axis is excluded).
+- The pipeline order is `shared/01` §6, not restated here: schema
+  validation, then hydration, guards, custom validators, before-transforms,
+  pre events, service, after-transforms, post events. The registry only
+  supplies the guard, validator and transform stages; `GenericHandler`
+  must call the service's schema validation **before** running the
+  resolved validators. Check: the **lifecycle-order test** in
+  `adapter/driving/rest`: a `TestEngine` with a recording `FunctionRegistry`
+  (one guard, one validator, one transform, one pre and one post subscriber)
+  runs one create and asserts the recorded order equals `shared/01` §6;
+  validated by swapping two steps and watching it fail. Until that test
+  passes, this rung is listed as dissenting in `shared/05` §"Where the rungs
+  disagree" (dated).
+- When a handler resolves, guards for the same op are bypassed; call
   `ResolveGuards` yourself to keep them.
 - `stellar generate --overrides` scaffolds `<name>_overrides.go` with the
   four hook stubs; existing stubs are preserved on re-run.
@@ -116,9 +135,10 @@ A package imports only lower levels. `go vet ./...` verifies.
   `Conflict(msg)`, `ValidationFailed(details...)`, `Unauthorized`,
   `Forbidden`, `BadRequest`, `Internal(msg, cause)`, `SchemaNotFound`,
   `SchemaInvalid`, `PreconditionFailed`).
-- `ErrorCode.HTTPStatus()` is the single mapping (shared table in
-  `shared/01-core-principles.md` §5, plus 412). Adapters never choose status
-  codes by hand.
+- `ErrorCode.HTTPStatus()` is the single mapping and equals the shared table
+  in `shared/01-core-principles.md` §5. Adapters never choose status codes
+  by hand. Check: a table test asserts every `ErrorCode` maps to the row in
+  the shared table.
 - `Internal` wraps the cause for logs but does not expose it in the message.
 
 ## 8. Engine (composition root)

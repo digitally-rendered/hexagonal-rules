@@ -7,8 +7,10 @@ two reference frameworks. Complements `typescript/03-testing.md`
 ## 1. Absolute rules
 
 - Never skip: `it.skip`, `describe.skip`, `test.todo`, `xit` fail CI via a
-  grep check; the only allowed skip is a missing optional integration
-  dependency with a reason string.
+  grep check. The single allowed skip is the Class B row of `shared/04` §5
+  (an environment probe for a missing optional integration dependency, with
+  the reason string), which is how the `integration:*` projects are
+  env-gated; the CI job with containers runs them unskipped.
 - Coverage thresholds per package (core ≥ 90%, adapters and http ≥ 85%,
   others ≥ 80%); the testing toolkit is itself tested.
 - Every MUST in the backend rules names a test path; a script checks the
@@ -104,6 +106,24 @@ Ships as a package so consumers test their schemas the same way:
 
 ## 8. Fast loop, slow gates
 
-Per-file type-check and lint while editing; one unit file per logical unit;
-contract and architecture before handoff; integration, fuzz and bench once
-at the checkpoint. If a slow check fails, drop back to the fast loop.
+The tiers are `shared/06` §12. Here: per-file `tsc` and ESLint (Tier 1);
+the `unit:*` project for the package (Tier 2); `contract:*` and
+`architecture` before handoff, `integration:*`, `fuzz` and `bench` once at
+the checkpoint (Tiers 3–4).
+
+## 9. Slice tests (the TypeScript equivalents of `shared/07` §2)
+
+Backend rows run in this file's Vitest projects; the frontend and E2E rows
+belong to the React side (`typescript/03`) and are listed here so the slice
+has one TypeScript map.
+
+| `shared/07` row | What proves it in TypeScript |
+|---|---|
+| B1 schema | the loader compiles `schemas/<entity>.json` (`CompiledSchema`); the three Ajv validators accept `DataGenerator.create()` and reject `invalid()`; the owner field and collection accessor resolve |
+| B2 persistence | `repositoryContract(makeRepo)` (§3) against the memory adapter and, env-gated, Mongo and SQL |
+| B3 ports | use-case tests with the memory adapter or a recording fake; the `REPOSITORY_METHODS` forwarding test for decorators; `satisfies Repository` at the type level |
+| B4 primary adapter | `createTestEngine(...).fetch` against the route table: the five operations (or the view) respond; owner 200, stranger 403-or-404 per posture, missing 404; `drivingAdapterContract` across Hono and Fastify |
+| B5 composition root | `createEngine(...).start()` in `e2e`; one request per new route through the booted adapter; routes added after `start()` fail this test |
+| C ladder | the projects of §2; the lifecycle-order test (§5); the drift check (`shared/02` §1: `codegen:check`); coverage at the repository's committed threshold (§1) |
+| D frontend | the type generator re-run and diffed (`codegen:check`); adapter tests with MSW; hook tests with a stub port and no `useApiClient()` in a dependency array; an `axe` assertion (`vitest-axe`) in every component test file; `npm run build` passes |
+| F end to end | Playwright: page objects; one `test.describe.serial` full workflow journey per feature (`shared/07` §2 F); axe-core WCAG 2.1 AA per new page; `test-map.json` updated for `--changed-only` runs; chromium while developing, the full browser matrix before handoff |

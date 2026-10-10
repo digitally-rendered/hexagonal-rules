@@ -2,7 +2,7 @@
 
 The Level 0 rung for a TypeScript backend. Same rules as
 `python/01-ddd-ports-adapters.md`; this file is the TypeScript idiom.
-Stack assumed: Node ≥ 20, TypeScript strict, ESM, Fastify (or Hono),
+Stack assumed: Node (floor: see `typescript/README`), TypeScript strict, ESM, Fastify (or Hono),
 Zod for transport validation, Kysely/Drizzle or Prisma for SQL, the official
 Mongo driver, Pino, Vitest.
 

@@ -1,13 +1,14 @@
 # hexagonal-rules
 
 Consolidated hexagonal-architecture and domain-driven-design rules, distilled
-from five production codebases and organised **per language**. This folder is
+from three public frameworks and several private applications, organised
+**per language** with a language-agnostic core. This folder is
 the single place the rules live; the source repositories are read-only inputs
 and are never edited from here.
 
 ## Lineage
 
-The rules were distilled from two public frameworks and several private
+The rules were distilled from three public frameworks and several private
 applications built on the same architecture.
 
 | Source | Language | What it contributed |
@@ -42,7 +43,9 @@ shared/      language-agnostic invariants every repo obeys
   10-ai-harness.md             LLM port and backends, model tiers, prompt versioning and layout, structured output, caching and provenance, judges
   11-operating-skills.md       the skill set that drives a pipeline: cycle driver, progress reporter, audits, skill contract
   12-code-intelligence-indexing.md GitNexus code graph and the document index as MCP tools: setup, freshness, impact gates, groups, branches
-  13-generated-agent-surface.md one schema → backend + SDK + application MCP server (+ UI types and hooks): generated tools/resources/prompts, agent as principal, human–agent patterns, parity and live-client tests, what each stack generates today
+  13-generated-agent-surface.md one schema → backend + SDK + application MCP server (+ UI types): generated tools/resources/prompts, agent as principal, human–agent patterns, parity and live-client tests, what each stack generates today
+  14-design-build-operation-brains.md  the three brains of an agentic project: design, build (coding agent) and operation (the shipped agent); memory kinds, stores, loops, read/write policy
+  15-autonomy-and-review-loop.md autonomy levels per agent, brain and surface; the loop contract (program file, metric, surface, revert, experiments log); promotion and demotion; what the human reviews
 
 python/      Python rules (FastAPI, Pydantic, Motor/SQLAlchemy, Poetry)
   01-ddd-ports-adapters.md     the classical hexagon (entities, value objects, aggregates, use cases, ports, adapters)
@@ -74,15 +77,23 @@ go/          Go rules
   05-pipeline-and-ai-harness.md plugin ensemble, ingestion lifecycle and AI harness in Go
   06-privacy-implementation.md the eight privacy layers in Go
 
-second-brain/  personal knowledge-system project design
-  01-project-design.md         three folders, read-only sources, fixed schema, audience vaults, fact registry, review cycle
-  02-requirements-and-design.md  how research/business inputs, facts and decisions feed the spec system
+specs/       the spec workflow (tool-neutral)
+  01-spec-system.md            layout, lifecycle, who writes what, hooks, invariants
+  02-requirements-schema.md    EARS requirements; every story names its schema
+  03-design-schema.md          numbered decisions, hex-layer components, data models, correctness properties
+  04-tasks-and-waves-schema.md tasks with requirement back-references, checkpoints, dependency graph, wave JSON
+  05-sequencing-and-state.md   master sequencing, remediation tracker, handoff JSON, state files, steering, teams
+  06-evidence-graded-inputs.md research and business inputs as raw and compiled tiers; facts and decisions as rows; audience rules for specs
+
+second-brain/  the knowledge record: project design, lifecycle, graph, domain mapping
+  01-project-design.md         three folders, read-only sources, fixed schema, compiled wiki, audience vaults, fact registry, lint, review cycle
   03-evidence-lifecycle.md     item lifecycle and defensibility: custody chains, manifests, exhibits, provenance, input and access tracking
   04-topics-issues-and-relationships.md  the content graph: nodes, edges, cardinality, temporal and logical tags, topics, episodes, counting rules, profiles
   05-domain-mapping.md         subject–object extraction, entity resolution, unified domain model, bindings and contracts, convergence, prefill, logic axes
-  06-design-build-and-operation-brains.md  the three brains: design, build (coding agent) and operation (the shipped agent); memory taxonomy, loops, read/write policy
 
-templates/   files a project copies in: MCP server entries, hooks, permissions, the managed CLAUDE.md block
+templates/   files a project copies in: MCP server entries (mcp-servers.json, mcp-project.json), hooks (gitnexus-reindex-hook.sh with test-reindex-hook.sh, settings-hooks.json), permissions (settings-permissions.json, settings-permissions-design.json), the managed CLAUDE.md block (claude-gitnexus-block.md)
+tools/       check_rules.py: the repo lint (references resolve, MUST names a check, every file indexed, optional private-term scan); run by .github/workflows/lint.yml
+reviews/     dated review records with remediation rows and outcomes
 ```
 
 ## Coverage matrix
@@ -95,14 +106,16 @@ rules; the cells name the per-language idiom file.
 | Classical DDD + Ports & Adapters | `python/01` | `typescript/09` | `go/04` |
 | Schema-driven framework | `python/02` | `typescript/06` | `go/01` |
 | Plugin ensemble, ingestion lifecycle, AI harness | `python/03` | `typescript/10` | `go/05` |
-| Privacy layering implementation | `python/02` §14 + `shared/08` | `typescript/11` | `go/06` |
+| Privacy layering implementation | `python/06` | `typescript/11` | `go/06` |
 | Testing | `python/04` | `typescript/03`, `typescript/07` | `go/03` |
 | Performance | `shared/06` §8 | `typescript/08` | `go/03` benchmarks |
 | Conventions | `python/05` | `typescript/04` | `go/02` |
 | Frontend hexagon | — | `typescript/01`–`05` | — |
-| Generated agent surface (application MCP) | `python/02` §17 | `typescript/06` §6 | `go/01` §1 `adapter/driving/mcp` |
+| Generated agent surface (application MCP) | `python/02` §17 (design) | `typescript/06` §6 (design) | `go/01` §1 (design) |
 | Generated frontend track (screens from OpenAPI) | emits the document (`shared/02` §6a) | `typescript/12` | emits the document (`shared/02` §6a) |
 | Design system and Figma | — | `typescript/13` | — |
+| Spec workflow | `specs/01`–`06` (language-agnostic) | same | same |
+| Three brains, autonomy and review loop | `shared/14`, `shared/15` (language-agnostic) | same | same |
 
 ## Rule strength vocabulary
 
@@ -114,7 +127,9 @@ rules; the cells name the per-language idiom file.
 - **MAY** — guidance.
 
 Every MUST in these documents names, or asks you to write, the check that
-enforces it. See `shared/04-enforcement.md`.
+enforces it. See `shared/04-enforcement.md`. `tools/check_rules.py` fails CI
+when a MUST section names no check, a section reference does not resolve,
+or a rule file is missing from this README.
 
 ## Adopting in a repository
 

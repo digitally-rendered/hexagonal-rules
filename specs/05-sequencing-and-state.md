@@ -20,15 +20,21 @@ The one authority for implementation order.
 
 Rules:
 
-- Phases are ordered by architectural dependency: foundation (auth, admin
-  shell) → core engines (backend-first) → modular content → engines over
-  content → validation milestone with real data → user journeys → documents
-  and transactions → professional portals → research and polish → tenancy and
-  access control → multi-org → admin integration → marketplace. Independent
-  tracks (infrastructure, payments, notifications, mobile, docs) run
-  alongside.
-- A **validation milestone** with real data gates the user-facing phases; it
-  produces counted artifacts and a test suite covering every requirement.
+- Phases are ordered by **architectural dependency**, never by business
+  priority: a phase comes after every phase whose output it consumes
+  (foundation before the engines that run on it, engines before the content
+  they process, content before the journeys that show it). The phase table
+  states each phase's **Depends on** and **Produces**; a phase whose
+  dependency is a later phase fails the sequencing check.
+- One **validation milestone** with real data gates every user-facing phase;
+  it produces counted artifacts and a test suite covering every requirement
+  of the phases before it. Nothing a user sees is scheduled before it.
+- **Independent tracks** (infrastructure, cross-cutting platform concerns,
+  documentation) run alongside the phases with their own gates and are
+  listed as tracks, not folded into a phase.
+- A gate is a command and a pass criterion, not a sentence: for example
+  "migration cycle green" (upgrade → downgrade → upgrade plus drift check
+  exits 0).
 - Gate changes are dated decisions with who decided; descoping records the
   reason and where the capability moved.
 - Reality tables are updated in the same change that ships the feature.
@@ -165,4 +171,4 @@ themselves evidence-graded (primary documents downloaded and extracted;
 dated updates that supersede earlier sections; questions that are phone
 calls, not desk research). The second-brain rules apply to them:
 verify before use, name the population behind every number, supersede
-visibly. See `second-brain/02-requirements-and-design.md`.
+visibly. See `specs/06-evidence-graded-inputs.md`.

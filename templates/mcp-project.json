@@ -1,20 +1,23 @@
 {
-  "$comment": "Project-scope .mcp.json: read-only document index servers. DB paths are absolute; the server opens them mode=ro. Register one server per audience when sessions differ in what they may see.",
+  "$comment": "Project-scope .mcp.json: read-only document-index servers (the pattern of second-brain/01 §7 and shared/12 §7; any implementation that exposes count/search/show/similar/stats as read-only tools). <document-index-module> is the project's own server module; <DOCUMENT_INDEX_DB> is the env var it reads the index path from. DB paths are absolute; the server opens them mode=ro. Register one server per audience when sessions differ in what they may see: a second entry with a different database is a different scope.",
   "mcpServers": {
-    "textindex": {
+    "document-index": {
       "type": "stdio",
       "command": "python3",
-      "args": ["-m", "textindex.mcp_server"],
+      "args": ["-m", "<document-index-module>"],
       "env": {
         "PYTHONPATH": "<path-to-code-repo>",
-        "TEXTINDEX_DB": "<path-to-index>/textindex.sqlite"
+        "<DOCUMENT_INDEX_DB>": "<path-to-index>/<audience>.sqlite"
       }
     },
-    "docs-index": {
+    "document-index-<other-audience>": {
       "type": "stdio",
-      "command": "<infigraph-or-equivalent>",
-      "args": ["mcp", "--root", "<path-to-docs>"],
-      "env": {}
+      "command": "python3",
+      "args": ["-m", "<document-index-module>"],
+      "env": {
+        "PYTHONPATH": "<path-to-code-repo>",
+        "<DOCUMENT_INDEX_DB>": "<path-to-index>/<other-audience>.sqlite"
+      }
     }
   }
 }

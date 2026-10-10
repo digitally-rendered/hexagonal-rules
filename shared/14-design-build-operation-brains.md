@@ -31,10 +31,10 @@ taxonomy both agent brains share, and the loops between the three.
 | Owner | people | the development team | the product; operators and end users curate within their rights |
 | Changes | per decision; reviewed | per session and per commit | per run, per ingest, per user action |
 | Truth rule | decided and recorded; amendments visible | observed in the repo; derived from source; rebuilt not edited | observed, hashed, cited; corrections supersede |
-| Lives in | the spec folder, research and business inputs, the rules repo | `.claude/` (state, skills, hooks, memory), indexes, learnings, CI | the application's storage tiers, registries, run store, audit |
+| Lives in | the spec folder, research and business inputs, the rules repo (a design-brain output) | `.claude/` (state, skills, hooks, memory), indexes, learnings, CI; the rules repo is read-only input here, not a store | the application's storage tiers, registries, run store, audit |
 | Freshness | stale when code reality diverges | stale when an index lags HEAD or state files lag the work | stale when a fact is superseded, a gate's inputs changed, a source re-ingested |
-| Contains private data | never | never (code and process only) | yes, under the privacy layering |
-| Specified in | `specs/01–05`, `02` | `shared/04`, `shared/06`, `shared/11`, `shared/12`, `specs/05` | `01`, `03`, `04`, `05`, `shared/08`, `shared/09`, `shared/10` |
+| Contains private data | only in the research and business input tier, under `shared/08` (`specs/06` §4); never in steering, specs or rules | never (code and process only) | yes, under the privacy layering |
+| Specified in | `specs/01–06` | `shared/04`, `shared/06`, `shared/11`, `shared/12`, `specs/05` | `second-brain/01`, `second-brain/03`, `second-brain/04`, `second-brain/05`, `shared/08`, `shared/09`, `shared/10` |
 | Acts through | review and approval | the developer MCP and the repo tooling | the generated application MCP and the human UI (`shared/13`) |
 
 The design brain is the input to the other two; the build brain produces
@@ -46,11 +46,27 @@ privacy and curation rules are requirements and design decisions in the
 design brain, and its stores are built and tested by the build brain. Its
 *contents* belong to operation alone.
 
+## 1a. Memory kinds
+
+The two agent brains share one taxonomy; each kind is defined once here and
+the tables in §3 and §4 give only its store, writer and privacy per brain.
+
+| Kind | Definition |
+|---|---|
+| working | what the agent holds for the current task and discards after it: goal, plan, retrieved context, partial results |
+| session state | what the next session needs to continue: checkpoint, what changed, what is half-done, what to do first |
+| episodic | what happened, as immutable dated records: runs, calls, gates, findings, actions, decisions taken |
+| semantic | what is known, as curated and versioned rows: facts, gaps, models, vocabularies, rules |
+| procedural | how to act: skills, workflows, prompts, gates and their versions |
+| structural | what the sources are, derived and rebuilt from them: indexes, graphs, schemas |
+| social | who is who and who may do what: principals, roles, ownership, delegations, consent |
+| personal | durable facts about a person and their stated preferences, held with their knowledge |
+
 ## 2. The design brain
 
 | Layer | Contents | Where specified |
 |---|---|---|
-| evidence for decisions | evidence-graded research, business and regulatory inputs | `02` §2 |
+| evidence for decisions | evidence-graded research, business and regulatory inputs | `specs/06` §2 |
 | intent | steering: product, tech, structure | `specs/05` §4 |
 | requirements | EARS acceptance criteria with stable ids | `specs/02` |
 | design | numbered decisions with rejected alternatives, hex-layer components, data models, correctness properties | `specs/03` |
@@ -58,7 +74,7 @@ design brain, and its stores are built and tested by the build brain. Its
 | order of the plan | master sequencing and the remediation tracker | `specs/05` §1–2 |
 | constraints | this rules repo and per-repo rule files that defer to it | `README.md` |
 | contradictions | spec versus code, spec versus spec, spec versus rules | `shared/07` §3 |
-| facts and decisions as rows | fact registry keys cited by requirements; decision records with status | `02` §3 |
+| facts and decisions as rows | fact registry keys cited by requirements; decision records with status | `specs/06` §3 |
 | the operation brain's own design | memory schema, retention, privacy layer per memory, curation roles | this file §4, `shared/08` |
 
 Rules: requirements first; every decision names its rejected alternative;
@@ -71,7 +87,7 @@ why a rule exists, not live state.
 | Memory | Holds | Store | Written by |
 |---|---|---|---|
 | working | the current task: goal, plan, open questions, partial results | the session transcript and scratch files | the coding agent |
-| session state | checkpoint, what changed, what is half-done, do-this-first | `progress.md`, `known-issues.md`, `HANDOFF.md`, handoff JSON | the completing agent before handoff |
+| session state | checkpoint, what changed, what is half-done, do-this-first | `progress.md` and `known-issues.md` (the build brain's live state, `specs/05` §3) and the handoff JSON; a record workspace's `HANDOFF.md` (`second-brain/01` §9) belongs to the operation or owner brain, never to both | the completing agent before handoff |
 | episodic | what was built and verified: commits, CI runs, gate records, benchmark baselines, dev-loop results | git history, CI artifacts, ratchet baselines, findings files | tooling, as it happens |
 | semantic | what is known about the code: the rules, the layer map, the learnings, the defect classes, Class B override allowlists | the rules repo, `hexagonal-architecture.md`, learnings docs, allowlists | people; agents propose |
 | procedural | how to build: skills, workflows, chain scripts, hooks, pre-commit, the cycle driver | `.claude/skills`, `.claude/workflows`, hooks, `scripts/` | people, with agents drafting; versioned and tested |
@@ -105,10 +121,10 @@ sits inside the privacy layering.
 
 | Memory | Holds | Store | Written by | Privacy |
 |---|---|---|---|---|
-| working | the current user task: goal, retrieved context, partial reasoning, tool results | request-scoped context; never persisted beyond the run except as provenance | the system agent | scoped to the acting principal |
+| working | the current user task: goal, retrieved context, partial reasoning, tool results | request-scoped context; discarded after the run except as provenance. This is a deliberate trade-off against the compounding of an LLM wiki: a user's answer is filed back only as an owner-scoped page or gap row when the acting principal is the owner and the profile allows it (`second-brain/01` §7) | the system agent | scoped to the acting principal |
 | session state | a conversation or workflow in progress: open items, last checkpoint, pending confirmations | a session store with TTL and owner | the system agent | owner-scoped; expires |
-| episodic | what happened: ingests, runs, stages, LLM calls, gate records, findings, user actions, access decisions | run store, custody log, audit log, findings, access log (`03` §4, `shared/08` §10) | code, as it happens; never by the model directly | append-only; dual trails |
-| semantic | what is known: items and their classifications, facts with verdicts and sources, gaps with search trails, the domain model and bindings, canonical names, the content graph | storage tiers, fact and gap registries, model store, vocabulary (`01`, `03`, `04`, `05`) | code records; the model proposes; curators approve | classification tags and audience per row |
+| episodic | what happened: ingests, runs, stages, LLM calls, gate records, findings, user actions, access decisions | run store, custody log, audit log, findings, access log (`second-brain/03` §3 and §11, `shared/08` §10) | code, as it happens; never by the model directly | append-only; dual trails |
+| semantic | what is known: items and their classifications, facts with verdicts and sources, gaps with search trails, the domain model and bindings, canonical names, the content graph | storage tiers, fact and gap registries, model store, vocabulary (`second-brain/01`, `second-brain/03`, `second-brain/04`, `second-brain/05`) | code records; the model proposes; curators approve | classification tags and audience per row |
 | procedural | how to act: prompts with versions, model tiers, skills exposed to users, workflows, consumer verbs, gates | prompt manifest, tier table, skill and workflow definitions, gate configs (`shared/09`, `shared/10`) | the build brain ships them; operators tune within bounds | no user data inside |
 | structural | what the sources are: document chunks with citations, schemas, indexes over the record | the document index, schema registry, search indexes | indexers over the record; rebuilt | inherits the source item's classification |
 | social | who is who: principals, roles, relationships, delegations, consent | identity, ReBAC tuples, delegation grants, consent ledger (`shared/08` L3–L6) | principals and administrators; never the model | audited; append-only consent |
@@ -118,7 +134,7 @@ Rules of the operation brain:
 
 - **Code records; the model proposes; people decide.** No memory row is
   written by the model directly; the model's output is validated against a
-  schema, applied by code, and logged with provenance (`shared/10` §6).
+  schema, applied by code, and logged with provenance (`shared/10` §4–5).
 - **Episodic memory is append-only and hashed.** Nothing is edited; a
   correction is a new record pointing at the old one.
 - **Semantic memory supersedes, never deletes**, except through the erasure
@@ -151,7 +167,7 @@ Rules of the operation brain:
 | build → design | remediation rows with class and evidence, contradiction reports, learnings | reviewed promotion; status is corrected to match validated reality before gaps become work (`specs/05` §2) |
 | build → operation | releases: code, the generated application MCP and UI, prompt manifest versions, tier tables, skills, gate configs, schema versions | nothing reaches operation except through a tested release; config carries its version |
 | operation → build | findings with producer layer and rerun command, failure classes, eval results, incident records, performance baselines | land as rows first; become bugs, tests and learnings; never edit the operation brain to make a finding go away |
-| operation → design | growth reports, synonym proposals, usage evidence, requirement change requests | evidence-graded like any other input (`02` §2); the model proposes, a person decides |
+| operation → design | growth reports, synonym proposals, usage evidence, requirement change requests | evidence-graded like any other input (`specs/06` §2); the model proposes, a person decides |
 | operation → operation | curation: verdicts, canonical-name merges, binding approvals, tag corrections | by curators within their rights; logged |
 
 Which brain yields when they disagree follows the remediation classes: when
@@ -162,29 +178,34 @@ divergence is recorded.
 
 ## 6. Agent read and write policy
 
-| Store | Build agent | System agent | Human commits |
-|---|---|---|---|
-| steering, requirements, design, rules | read; propose amendments | no access | yes |
-| tasks, sequencing, tracker, handoff JSON | read; check off with evidence | no access | review |
-| progress, known issues, handoff | read and write at checkpoints | no access | no |
-| skills, workflows, prompts, hooks | read; draft with manifest bump and tests | read the released version only | review |
-| code graph and document index of the repo | read; rebuild via the indexer | no access | no |
-| record originals, custody logs | no access (fixtures only) | read within scope; never write | never (write-once by code) |
-| facts, gaps, bindings, vocabulary | fixtures only | propose rows; code applies validated rows | curation |
-| audit, run store, gate records (operation) | read aggregates for evals | written through recording code paths only | never by hand |
-| identity, ReBAC, consent | fixtures only | read through the authorization port; never write | administrators and principals |
-| developer memory | one verified fact per file | no access | the developer confirms feedback |
-| end-user preferences | no access | read and write for the acting principal only | the user |
+| Store | Design agent (research compile, drafting, refinement) | Build agent | System agent | Human commits |
+|---|---|---|---|---|
+| steering, requirements, design, rules | draft and amend on its own branch; never on main | read; propose amendments | no access | yes |
+| tasks, sequencing, tracker, handoff JSON | write tasks and waves; flip a tracker row to READY only after the wave checker and the readiness validators pass (`specs/01` §3) | read; check off with evidence | no access | review |
+| progress, known issues, handoff | no access | read and write at checkpoints | no access | no |
+| skills, workflows, prompts, hooks | propose | read; draft with manifest bump and tests | read the released version only | review |
+| code graph and document index of the repo | read | read; rebuild via the indexer | no access | no |
+| record originals, custody logs | no access (research raw tier only, `specs/06` §2) | no access (fixtures only) | read within scope; never write | never (write-once by code) |
+| facts, gaps, bindings, vocabulary | research facts and decision rows as proposals | fixtures only | propose rows; code applies validated rows | curation |
+| audit, run store, gate records (operation) | read aggregates for product proposals | read aggregates for evals | written through recording code paths only | never by hand |
+| identity, ReBAC, consent | no access | fixtures only | read through the authorization port; never write | administrators and principals |
+| developer memory | no access | one verified fact per file | no access | the developer confirms feedback |
+| end-user preferences | no access | no access | read and write for the acting principal only | the user |
 
-Every non-proposal write by either agent carries actor type, reason and
+Curation and editing are roles, not adjectives: `curator` (operation brain) and `editor` (design brain) are ReBAC roles (`shared/08` L4) whose write sets are the rows above; a curation write without a principal holding the role fails closed. Every non-proposal write by any agent carries actor type, reason and
 inputs hash (`shared/08` §10). An agent proposes and simulates; a human
 commits anything consequential (`shared/09` §11).
+
+## 6a. Autonomy
+
+How far each agent may act unattended on its brain, the loop it runs and
+how it earns more autonomy are in `shared/15`.
 
 ## 7. Tests and gates
 
 | Concern | Check |
 |---|---|
-| state in the wrong brain | dated status lines in steering or rules fail a test; numbers in prose that are not fact-registry references fail a lint |
+| state in the wrong brain | dated status lines in steering fail a test; implementation-state counts in specs outside the sequencing audit table fail a lint. Rule files are exempt: a dated count there is evidence for a rule, not state (`CLAUDE.md`) |
 | world data in the build brain | privacy scan over the repository, state files, fixtures and agent memory finds no classified or personal content |
 | build data in the operation brain | prompts, configs and stores contain no repository paths, developer identities or spec status; a release-content test asserts it |
 | handoff completeness | the orchestrator rejects a handoff missing the summary or state-file updates |

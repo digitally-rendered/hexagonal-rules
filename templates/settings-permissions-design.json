@@ -1,0 +1,13 @@
+{
+  "$comment": "Project .claude/settings.json fragment for a design-tool MCP server (registered as `design-tool` in .mcp.json). An .mcp.json entry cannot make a server read-only; the permission allowlist is the enforceable mechanism. Pre-approve only the tools that read a design (file metadata, node context, variables, styles, screenshots). Tools that create or change nodes, variables, components or files, publish, comment or export stay prompted; never allow `mcp__design-tool__*`. Replace <placeholders> with the server's actual read-tool names and keep the list exact.",
+  "permissions": {
+    "allow": [
+      "mcp__design-tool__<get_file_metadata>",
+      "mcp__design-tool__<get_design_context>",
+      "mcp__design-tool__<get_variables>",
+      "mcp__design-tool__<get_styles>",
+      "mcp__design-tool__<get_screenshot>",
+      "mcp__design-tool__<search_components>"
+    ]
+  }
+}

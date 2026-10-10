@@ -9,7 +9,7 @@
   classes; `UPPER_SNAKE_CASE` constants. API paths `kebab-case`; bodies and
   query params `snake_case`.
 - One use case / entity / port / plugin per file. Files named after the symbol.
-- Domain identifiers (`UserId`, `CaseId`) and value objects over raw UUIDs and
+- Domain identifiers (`UserId`, `<Entity>Id`) and value objects over raw UUIDs and
   primitives; enums over strings.
 - Exceptions: a base domain exception; `NotFoundException`,
   `BusinessRuleException`, `ValidationException` in the application layer;

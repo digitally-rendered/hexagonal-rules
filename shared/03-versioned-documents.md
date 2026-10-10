@@ -2,12 +2,15 @@
 
 Shared by [slip-stream](https://github.com/digitally-rendered/slip-stream), [stellar-drive](https://github.com/digitally-rendered/stellar-drive) and the applications
 built on them. The classical SQL rung uses `is_deleted` soft-delete and a
-`version` column for optimistic concurrency instead; those rules are in
-`python/01-ddd-ports-adapters.md`.
+`version` column for optimistic concurrency instead; those rules belong to
+the Level 0 rung (`shared/05`).
 
 ## 1. The invariant
 
 **Never mutate a stored document. Every write inserts a new version.**
+Check: the repository contract suite below (create → v1; update → v2 with a
+new id; delete → tombstone; the row for v1 is byte-identical afterwards),
+run against every adapter, plus the raw-mutation lint of §2.
 
 | Operation | Effect |
 |---|---|
@@ -34,7 +37,8 @@ built on them. The classical SQL rung uses `is_deleted` soft-delete and a
   index plus an application-level check); an index spanning every version
   row makes the first update conflict with itself.
 - Reads always return a typed document model; raw dicts never leave the
-  repository.
+  repository. Check: the contract suite asserts the type of every returned
+  value; the raw-read lint of §2.
 
 ## 2. Why this is a correctness control
 
@@ -73,7 +77,10 @@ generated path produced none. Hence:
   `_lte`, `_in`, `_nin`, `_like`, `_ilike`, `_contains`, `_startswith`,
   `_endswith`, `_exists`, `_is_null`, `_and`, `_or`, `_not`).
 - The DSL is parsed and validated in the core and translated per backend in the
-  adapter (aggregation pipeline for Mongo, `WHERE` for SQL).
+  adapter (aggregation pipeline for Mongo, `WHERE` for SQL). Check: a parser
+  test rejects an unknown operator and a non-allowlisted field with 400; the
+  contract fuzz suite sends raw-query shapes and asserts none reaches the
+  adapter.
 - Pagination supports offset (`skip`/`limit`) and cursor (`first`/`after`,
   `last`/`before`); the response carries `total` and `has_more` or `page_info`.
 
@@ -104,4 +111,5 @@ parameterised `filters` (`param`, `field`/`fields`, `op`), `sort`,
 - A genuinely public read is a view that declares `roles` and omits `scope`,
   not an entity with ownership turned off.
 - A caller with no resolvable id gets a match-nothing filter, never an
-  unscoped query.
+  unscoped query. Check: the security suite's "principal without id" case
+  over every scoped view and entity asserts an empty result.

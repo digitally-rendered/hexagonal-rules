@@ -53,7 +53,7 @@ how consent was captured.
 ## 3. L1 — Classification
 
 - A **classification registry** is a static, versioned module in the domain:
-  identifier → `frozenset` of tiers (`PII`, `PRIVILEGED`, `CONFIDENTIAL`,
+  identifier → an immutable set of tiers (`PII`, `PRIVILEGED`, `CONFIDENTIAL`,
   `PROTECTED_PARTY_DATA`, …). Tags, not a single enum: one field can be PII
   and protected-party data at once.
 - Handling resolves to the **strictest applicable rule** across the tags
@@ -67,40 +67,35 @@ how consent was captured.
 ## 4. L2 — Audience and privilege
 
 **Audience and privilege are derived from who is on an item, never from
-keywords.** The party model is generic: the user, the user's own advisor
-(a professional whose communications with the user are privileged), the
-other side (a counterparty and their advisors and associates), neutral
-professionals (mediators, coordinators, evaluators engaged by both sides),
-and everyone else.
+keywords.** The mechanism is generic; the participant classes, the
+privilege bases and the audience labels that fill it are **profile
+configuration** (`second-brain/03` §14), not code.
 
-| Privilege | When |
-|---|---|
-| `advisor_client` | the user's own advisor is on the item and the other side is absent; or a document marked privileged; with third parties present the basis says "possible waiver: advisor to review" and it is still withheld |
-| `mediation` | a neutral mediator is on the item |
-| `none` | everything else; a neutral professional is not privileged; an unlicensed helper is not an advisor |
-
-| Audience | When (first match) | Use |
-|---|---|---|
-| `shared_with_other_side` | the counterparty, their advisors or associates are on it | safe base for drafting; they already have it |
-| `privileged` | advisor–client and only own advisors | advisor only; never into anything for the other side |
-| `neutral_professional` | a neutral professional, other side absent | check with the advisor before use |
-| `private` | the user's own material and notes to self | not privileged, not yet disclosed; may become disclosable |
-| `third_party` | anyone else, including unknown senders | review |
-
-- One classification function, used by every consumer (index, generated
-  views, export, read-only servers). Nothing re-implements it.
-- When one thread carries several explicit audiences, the most restrictive
-  wins, in a fixed order.
+- Every participant on an item (sender, recipients, author, signatories)
+  resolves through one roster to a **participant class** (the owner, an
+  accountable professional engaged by the owner, a counterparty and their
+  representatives, a neutral professional, a protected participant, a third
+  party, …); the profile maps each combination of classes present to one
+  `privilege` basis and one `audience` label. An item carries exactly one
+  of each.
+- **One classification function**, used by every consumer (index, compiled
+  pages, generated views, export, read-only servers). Nothing re-implements
+  it; a test sweeps the code for a second implementation.
+- **Most restrictive wins**: when one item or thread carries several
+  explicit audiences, or a catalogued audience disagrees with the derived
+  one, the most restrictive applies, in the fixed order the profile states.
+- **Unmapped stays `unknown`**: a participant the roster does not map yields
+  `unknown`, which is listed for a person to resolve and is never guessed
+  into a class; the most restrictive handling applies until it is mapped.
 - Each audience is a separate output (one generated view, one server scope).
   Restricting a server to an audience is a hard limit: out-of-scope items are
   invisible to every tool, not filtered per query.
 - Privileged rows are **withheld by default** from any export; counts of
   withheld rows are reported, never their content; a claim citing a withheld
   row keeps the claim and drops the pointer.
-- A forwarded privileged thread with a third party on it is `private`, not
-  `privileged`; the advisor reviews waiver.
-- Roles that are not explicitly mapped stay `unknown` and are listed; they
-  are never guessed.
+- A privileged item that reaches a participant outside the privileged
+  classes is downgraded by the classifier, never kept privileged by habit;
+  the accountable professional reviews whether the privilege survives.
 
 ## 5. L3 — Ownership scoping (generated surface)
 
@@ -129,15 +124,25 @@ and everyone else.
   `AuthorizationResult{allowed, reason, relationship}`. It replaces
   per-controller access-check duplicates.
 - Evaluation order for a resource: platform admin override → owner → active
-  professional–client relationship → counterparty (read-only on explicitly
-  shared data) → organization membership (when memberships exist) → deny.
+  professional engagement (a professional the owner has engaged) →
+  counterparty (read-only on explicitly shared data) → organization
+  membership (when memberships exist) → deny.
+- Two roles name who may change derived knowledge on the brains of
+  `shared/14`: **`curator`** approves, merges, drops and annotates proposed
+  rows, topics and episodes on the operation or record brain; **`editor`**
+  approves and corrects compiled pages, specs and decisions on the design
+  brain. Both are relationship records like any other (granted by the owner
+  or the accountable professional, time-bounded, revocable); their write set
+  is the one `shared/14` §6 lists for the brain, nothing wider. Check: every
+  `curate` row in `log.md` (`second-brain/01` §11) carries a principal
+  holding the role; a row without one fails the chain verify.
 - Denials do not distinguish "does not exist" from "not allowed" at the
   port; the transport layer picks one posture (`403`/`404`) per project and
   keeps it.
 - Data isolation applies **at the repository query level** so out-of-scope
   rows are never loaded. Organization scoping is a parameter on repository
   methods from day one, even when there is one organization.
-- Relationships (professional–client, counterparty assignment, grants) are
+- Relationships (professional engagement, counterparty assignment, grants) are
   explicit, typed records with creation path, status, timestamps, and
   termination; access changes on the next request after a change.
   Retroactive grants (engaging a professional exposes existing records) are
@@ -189,7 +194,7 @@ and everyone else.
   outside its adapters touches a KMS SDK, the crypto library, or a key file.
   It lives in the application layer; the codec and adapters live in
   infrastructure; the domain never imports it.
-- Encryption is absorbed at the ORM boundary by column type decorators;
+- Encryption is absorbed at the persistence-mapping boundary (column types, scanners, client extensions);
   repositories, use cases and controllers are unaware. Unwrapped keys live
   only in a request-scoped cache, never persisted, never logged.
 - **Crypto-erasure**: destroying a data key makes everything under it
@@ -231,15 +236,20 @@ and everyone else.
 
 Privacy rules include what is **left out**, not only what is protected:
 
-- Protected parties (minors, dependants, non-party individuals): never
-  solicit statements from them to gather evidence; record unprompted
-  statements the same day in exact words; leave out other people's health
-  information, other household members, and informants.
-- Roles decide: the responsible professional decides what is produced or
-  disclosed; the client decides what is sent. Tools never send, draft, reply
+- A profile may declare **protected participant classes** whose data is
+  never solicited: no collector, skill or agent asks them anything to gather
+  material; an unprompted statement from one is recorded the same day in
+  exact words and classified like any other item. The classes themselves
+  are profile configuration (`second-brain/03` §14).
+- A profile lists **excluded categories** (for example third parties'
+  health information, people who are not participants) that are absent from
+  every produced output; the produced-set check counts and reports what it
+  excluded.
+- Roles decide: the accountable professional decides what is produced or
+  disclosed; the owner decides what is sent. Tools never send, draft, reply
   or forward on anyone's behalf.
-- Verify before use: every claim is labelled verified / client's account /
-  contradicted / not found, with a citation.
+- Verify before use: every relied-on claim carries a verdict from the one
+  enum (`second-brain/01` §5) and a citation.
 
 ## 12. Tests that prove the layering
 
@@ -247,9 +257,9 @@ Privacy rules include what is **left out**, not only what is protected:
 |---|---|
 | L0 | repo scan for secrets and private paths; index shrink guard test; custody chain verify |
 | L1 | classification coverage audit script, gated once green |
-| L2 | classification unit tests per role combination; generated views and exports contain no privileged rows outside the privileged audience; server audience-scope test |
+| L2 | classification unit tests per participant-class combination from the profile table; one-classifier sweep; generated views, compiled pages and exports contain no privileged rows outside the privileged audience; server audience-scope test |
 | L3 | ownership invariant over every aggregate; role matrix; endpoint mechanism ledger |
-| L4 | authorization service tests per relationship and action; repository scoping tests |
+| L4 | authorization service tests per relationship and action; repository scoping tests; every `curate` log row carries a `curator` or `editor` principal |
 | L5 | delegation scope intersection; admin override not inherited; audit entry written |
 | L6 | ledger append-only (no update/delete on the port); withdrawal creates a new record; consent gate raises before any write |
 | L7 | envelope round-trip, tamper detection, wrong key, destroyed key → unavailable; rotation reads old rows; blind index lookup |

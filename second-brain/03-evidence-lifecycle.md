@@ -3,7 +3,7 @@
 `01-project-design.md` describes the workspace and the session cycle. This
 file is the **item-level** lifecycle every piece of collected material goes
 through, and the provenance rules that let anyone who must check the work
-(a reviewer, an auditor, a regulator, a counterparty, a court) confirm that
+(a reviewer, an auditor, a regulator, a counterparty, an adjudicator) confirm that
 an item is unaltered, that every derived value traces back to an original,
 and that inputs, tools and access are tracked. The rules are the same for a
 research corpus, a product's design record, a finance ledger or a dispute
@@ -137,10 +137,9 @@ archive and a failure stops the cycle for that source.
 ## 7. Review
 
 - Every claim that will be relied on is searched **for and against**,
-  labelled (verified / client's account / contradicted / partial / not
-  found), and corrected early and visibly. "Not found" names the sources
-  and queries tried; an exhausted search trail is itself evidence of
-  absence.
+  labelled with one verdict from the enum defined in `01` §5, and corrected
+  early and visibly. `not_found` names the sources and queries tried; an
+  exhausted search trail is itself evidence of absence.
 - Weight: contemporaneous record > later recollection > second-hand
   account; a party's own written words > a representative's summary of them.
 - Expert or professional reports are recorded as written (author,
@@ -157,7 +156,9 @@ archive and a failure stops the cycle for that source.
   are never findings.
 - **Issues and episodes** come from analysis output and are curated by hand
   (merge, rename, drop, annotate) in a curation file that rebuilds apply
-  every time.
+  every time. Every curation row cites the item ids that justified it and
+  carries a `recorded` date; lint marks the row stale when a cited item is
+  superseded; the write is a `curate` op in the log (`01` §11).
 - **Produced sets** (exhibit sets, report appendices, evidence packs,
   audit samples) are declared, not assembled by hand: name, label, date
   window, selection patterns, excluded participants (privileged
@@ -211,11 +212,13 @@ archive and a failure stops the cycle for that source.
 - **Decisions and corrections**: facts and gaps are append-only with
   `supersedes`; working notes strike the old statement and date the
   correction; handoff logs are dated.
-- **Access and actions**: an event log (ingest, verify, correct, lint,
-  render, export) as a hash chain rendered as a readable log; connector and
-  tool-server calls audited with actor type (human or agent), tool, inputs
-  and session; privileged content requires a human confirmation each time it
-  is opened through a tool.
+- **Access and actions**: one event log per brain with the closed op enum
+  of `01` §11 (`ingest, compile, query, lint, verify, correct, render,
+  export, curate`), a hash chain rendered as `log.md`; custody entries,
+  tool-server audit entries and run records are rows of this chain, not
+  separate logs. Connector and tool-server calls are audited with actor type
+  (human or agent), tool, inputs and session; privileged content requires a
+  human confirmation each time it is opened through a tool.
 - **People and roles** live in one roster; an unmapped correspondent stays
   unknown and listed; nothing is guessed.
 - **Delegated roles**: the accountable professional (counsel, auditor,
@@ -245,24 +248,73 @@ archive and a failure stops the cycle for that source.
 | classification | unit tests per role combination; produced sets contain no excluded participants |
 | produced artifacts | the verifier on every produced file; number continuity across a set |
 | registries | facts and gaps append-only; a lint flags conflicting values, quotes absent from source, superseded facts still quoted |
+| curation | every curation row has cited item ids and `recorded`; a superseded cited item makes the next lint report the row stale; every curation write is a `curate` log row with a principal |
+| log | the log schema's op enum equals the list in `01` §11; the fixture log exercises every op; no second running log exists |
 | missing items | tracker detect patterns run on every ingest |
 | audience scope | the read-only server refuses out-of-scope items for every tool |
 
 ## 14. Profiles
 
-The lifecycle is generic; a **profile** names the parties, the privileged
-relationships, the produced-artifact format and the review weights for one
-kind of record. Profiles are configuration (roster roles, classifier
-tables, artifact templates), not code paths.
+The lifecycle is generic; a **profile** names the participant classes, the
+privileged relationships, the produced-artifact format and the review
+weights for one kind of record. Profiles are configuration (roster roles,
+classifier tables, `asserted_by` and `timeline_type` extensions, artifact
+templates), not code paths.
 
-| Profile | Parties | Privileged relationship | Produced artifacts | Typical review question |
+**Minimum profile.** Every profile, including personal knowledge, has at
+least: immutable raw items stored by hash (§3), a compiled wiki (`01` §4a),
+an index page, one `log.md` with the closed op enum (`01` §11) and the lint
+stage (`01` §11). That is the smallest setup at which a bad compile can be
+noticed and undone: raw by hash makes a wrong page recompilable, the index
+and lint make an orphan or contradiction visible, the log makes the model's
+work auditable. Every mechanism beyond it in this file names the profile
+that needs it and the failure it prevents: the write-once link and 0444
+mode (adversarial, audit: an original quietly replaced), the hash-chained
+custody log and manifests (adversarial, audit, research: "which bytes did
+the tool see"), RFC 3161 timestamping (adversarial, audit: existence at a
+date disputed), LFS (any profile with large originals), the produced-artifact
+anatomy and verifier (adversarial, audit: an artifact challenged after
+release), the full node and edge set of `04` (any profile that counts across
+the set). A profile that adopts a mechanism without naming the failure is
+over-built and the review asks it to drop it.
+
+| Profile | Participant classes | Privileged relationship | Produced artifacts | Typical review question |
 |---|---|---|---|---|
-| dispute / adversarial | owner, own advisor, other side and their advisors, neutral professionals | advisor–client, mediation | exhibits with embedded originals, disclosure sets | can we prove it, who started it, how long |
+| dispute / adversarial | owner, accountable professional, counterparty and their representatives, neutral professional, protected participant, authority | professional–owner; neutral facilitation | artifacts with embedded originals, disclosure sets | can we prove it, who started it, how long |
 | audit / compliance | the organisation, its auditor, the regulator | auditor working papers | evidence bundles, control mappings | is the control operating, where is the evidence |
 | research | the author, sources, reviewers | none; embargoed sources | citations, data appendices | is the claim supported, by which source, at what date |
 | product / engineering | the team, customers, vendors | legal and security reviews | decision records, release evidence | what did we decide, when, why, what changed since |
-| personal knowledge | the person, correspondents, professionals | advisor–client | notes, summaries | what do I actually know, and from where |
+| personal knowledge | the person, correspondents, professionals | professional–owner | notes, summaries | what do I actually know, and from where |
+
+The **dispute / adversarial** profile's classifier tables, as the fullest
+example of what a profile configures (`shared/08` §4 holds only the
+mechanism):
+
+| Privilege basis | When |
+|---|---|
+| `professional_owner` | an accountable professional engaged by the owner is on the item and no counterparty-side participant is; or a document the catalogue marks privileged; with a third party present the basis records "possible waiver: professional to review" and the item is still withheld |
+| `neutral_facilitation` | a neutral professional engaged by both sides is on the item |
+| `none` | everything else; a neutral professional alone is not privileged; a helper without the professional role is not a professional |
+
+| Audience label (first match) | When | Use |
+|---|---|---|
+| `shared_with_counterparty` | a counterparty or their representatives are on it | safe base for drafting; they already hold it |
+| `privileged` | professional–owner, own-side professionals only | professional only; never into an output for the counterparty |
+| `neutral_professional` | a neutral professional, counterparty absent | check with the accountable professional before use |
+| `private` | the owner's own material and notes to self | not privileged, not yet disclosed; may become disclosable |
+| `third_party` | anyone else, including unknown senders | review |
+
+Profile extensions for this row: `asserted_by` adds `representative`
+(a counterparty's representative) to the neutral defaults of `01` §5;
+`timeline_type` adds `procedure_step`, `proposal` and `facilitation_stage`
+(`04` §9); the protected-participant class is declared so that nothing is
+ever solicited from its members (`shared/08` §11); excluded categories list
+third parties' health information and non-participants; the accountable
+professional reviews whether a privilege survives when an item reaches a
+third party. Other profiles declare their own tables in the same shape.
 
 A workspace may run several profiles over one record; the profile decides
-audience labels and review weights, never whether an item is hashed,
-logged or cited.
+participant classes, labels and review weights, never whether an item is
+hashed, logged or cited. Check: the classifier's tables are loaded from the
+profile, and the one-classifier sweep (`shared/08` §12 L2) finds no label
+literal in code.

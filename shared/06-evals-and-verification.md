@@ -35,7 +35,9 @@ self-report is at best a router for prioritisation, never a gate.
   what action (`emit` / `enhance` / `merge` / `override`), the value and
   confidence at that step, and a timestamp.
 - Serialization MUST preserve the chain and every status field; a `to_dict`
-  that drops `validation_status` makes validation invisible.
+  that drops `validation_status` makes validation invisible. Check: a
+  round-trip test serialises and deserialises an artifact with a multi-step
+  chain and every status field set, and asserts equality step by step.
 - Conflict resolution records the losing candidates and an `override` step;
   replacing the winner silently erases the signal the ensemble exists to
   produce.
@@ -81,9 +83,9 @@ Each finding maps to a UI row and to a producer fix command. The
 - A layer that judges fewer than a coverage floor (95%) of its steps makes the
   run `partial`, which audits treat as failure. "Success" with 22.5%
   coverage was the incident.
-- The same error N times in a row, or a known systemic marker ("Not logged
-  in"), aborts the run as a systemic failure instead of grinding out
-  thousands of identical failures.
+- A systemic failure aborts the run instead of grinding out thousands of
+  identical failures; the abort rule and its test are stated once in
+  `shared/10` §6.
 - Verdicts persist as they land; a killed run resumes from the cache.
 - Spend is tracked and logged, never enforced by default; the provider's limit
   is the limit and the loop polls to resume.
@@ -156,6 +158,9 @@ keep going and surface everything in one report.
 
 ## 12. Verification tiers for code changes
 
+This table is the one statement of the tiers; `shared/07` and the language
+testing files cite it and add only their commands.
+
 | Tier | When | What |
 |---|---|---|
 | 1 file-level | after every file change | lint + types on the changed file |
@@ -163,6 +168,6 @@ keep going and surface everything in one report.
 | 3 full suite | before handoff | full backend + frontend suites with coverage |
 | 4 handoff | before marking done | coverage thresholds; new generated surface visible in the API docs; state files updated; no new skips |
 
-CI runs Tiers 2–3 again as a safety net; it must never be the first place a
+CI runs Tiers 2–3 again as a safety net; it SHOULD never be the first place a
 failure is caught. If a test passes locally and fails in CI, suspect the
 environment first.

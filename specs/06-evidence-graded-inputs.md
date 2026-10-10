@@ -32,6 +32,17 @@ private or business facts; the spec repo holds no secrets.
 - Decisions (corporate structure, gates, descopes) are small decision
   records: date, status, context, decision, consequences.
 
+### 2a. Raw and compiled are separate tiers
+
+Downloaded sources (reports, statutes, prior specs, a code inventory at a
+commit) land in `research/raw/` by content hash, read-only, exactly as
+record originals do (`second-brain/03` §2). The research documents under
+`research/*.md` are compiled pages: they cite raw hashes and may be
+rewritten; a dated update supersedes an earlier section visibly. A claim in
+a compiled page with no raw citation is a gap, not a fact. Check: the
+research build fails on a compiled page citing a hash absent from
+`research/raw/`, and on a raw file modified after first write.
+
 ## 3. Facts, decisions and requirements as rows
 
 - Key figures used in requirements (thresholds, limits, dates, counts from a

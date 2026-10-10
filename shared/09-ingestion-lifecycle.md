@@ -42,6 +42,13 @@ Layer 1  Format spec                 THE artifact: schemas, identity, versioning
 8 publish      to a registry that never deletes and verifies by hash
 ```
 
+This is the abstract lifecycle, not a product's stage list: every
+ingestion system acquires, preprocesses, extracts, resolves, enriches,
+cascades, packages and publishes, and the names above are the vocabulary
+the other files cite. A product's sub-stages (which structures it derives,
+which trees it links) live in its own documentation and are not restated
+here.
+
 Every stage has a **typed input, a typed output, preconditions, and a gate
 command**. Stages are independently re-runnable from their inputs; rebuilding
 stage N does not rerun 0..N-1 when their outputs are unchanged. Hashes drive
@@ -55,8 +62,8 @@ logged with the build so any rebuild can be replayed exactly:
 | Axis | Examples | Default |
 |---|---|---|
 | region / tenant | `A`, `A-SUB`, `A-*` | all |
-| domain | `family`, `civil` | all in scope |
-| category | `support`, `procedural` | all |
+| domain | `domain-a`, `domain-b` | all in scope |
+| category | `category-a`, `category-b` | all |
 | stage range | `from=2,to=5`, `from=5` | stale-driven |
 | freshness | `--only-stale` (default), `--force`, `--since <date>` | only stale |
 | output | `package` (whole scope) or `proposal` (partial scope) | by scope |
@@ -209,7 +216,8 @@ twice and diffs.
   sibling and writes an audit record `(actor, actor_type, reason, timestamp,
   input_hash)`; every rationale that makes a domain claim carries at least
   one source citation; rendered documents and forms carry per-section and
-  per-field provenance, and anything AI-drafted cannot be filed unreviewed.
+  per-field provenance, and anything AI-drafted cannot be committed to the
+  record unreviewed.
   A conformance self-test exercises each rule; a verb without its siblings
   fails it.
 - Hot reload is lazy by default; eager mode needs a registered migration

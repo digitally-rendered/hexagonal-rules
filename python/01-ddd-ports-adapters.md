@@ -46,7 +46,7 @@ allowlist for domain/application → infrastructure.
   creation event to a private `_events: list = field(default_factory=list,
   init=False)`.
 - Business methods validate invariants, mutate state, append an event.
-- Use domain types (`Email`, `Money`, `CaseId`), not primitives, for domain
+- Use domain types (`Email`, `Money`, `<Entity>Id`), not primitives, for domain
   concepts. Use domain enums, not magic strings.
 
 ## 3. Value objects
@@ -124,9 +124,11 @@ the technology: `SqlUserRepository`, `MongoDocumentRepository`,
   the use case, execute, map the response. Map domain exceptions to status
   codes per the shared table; let unknown exceptions surface as 500.
 - No business logic, no repository access, no ORM imports in a controller.
-- Use the Auth0/RS256 dependency for authentication; never the legacy mock
-  dependency in new code. Authorization is a port call or a role dependency,
-  not an inline role string comparison.
+- Use the production authentication dependency (the one that validates the
+  identity provider's signed tokens); never a mock dependency in new code.
+  Authorization is a port call or a role dependency, not an inline role
+  string comparison. Check: a test greps the routers for the mock
+  dependency's import and fails on any hit outside test fixtures.
 
 ## 11. Secondary adapters
 

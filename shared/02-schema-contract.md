@@ -4,17 +4,31 @@ In the schema-driven rungs of the ladder ([slip-stream](https://github.com/digit
 [stellar-drive](https://github.com/digitally-rendered/stellar-drive) and applications built on them), a JSON Schema file
 **is** the domain definition. This document is the contract those files
 obey. The classical rung models the domain in code and uses schemas only at
-the edges; its rules are in `python/01-ddd-ports-adapters.md`.
+the edges; its rules are the Level 0 rung's (`shared/05`).
 
 ## 1. One source of truth
 
 - `schemas/*.json` (and `views/*.json`) generate **both halves of the stack**:
   backend models, repositories, endpoints; frontend types, validators, mappers,
   view descriptors. Nothing else is authoritative.
-- Drift between generated halves is a **build failure** (`codegen:check` in
-  CI), not a runtime surprise.
+- Drift between a generated artifact and its schema is a **build failure**
+  caught by the stack's **drift check**, not a runtime surprise. Every other
+  file in this repository that says "the drift check" means the row below
+  for its stack:
+
+  | Stack | Drift check | Covers today | Adds under the frontend track (design, `shared/13` §2a) |
+  |---|---|---|---|
+  | Python (Level 3) | a generation script re-run in CI and diffed against the committed output | backend models, routers, SDK client; the application's `types.ts`, `schemas.ts`, `views.ts`, `apiTypes.ts` | default screens, route table, theme |
+  | Go (Level 4) | golden-file tests per generator (`-update` regenerates deliberately) | structs, repositories, services, handlers, override stubs, OpenAPI, GraphQL SDL, SDK | the same frontend artifacts, from the emitted OpenAPI document |
+  | TypeScript (Level 3.5) | `codegen:check`: regenerate and diff, fails CI on any difference | types, typed wrappers, OpenAPI, SDL, SDK, override stubs | default screens, route table, theme |
+
+  The shared data hooks (`useEntity`, `useEntityList`, `useView`,
+  `useMutation`) are hand-written once and are **not** generated, so no
+  drift check covers them; the generated types they consume are covered.
+  MCP tools, resources and prompts join the covered set in the stack whose
+  application MCP server generates them (`shared/13` §2a says which).
 - To add an entity: drop a schema file, restart (or hot-reload). Never
-  hand-write the Pydantic model, CRUD, or endpoints for a schema-driven entity.
+  hand-write the model class, CRUD, or endpoints for a schema-driven entity.
 - Hand-crafted models are allowed only for: validation JSON Schema cannot
   express, computed properties or custom serialization, explicit relationship
   typing, or measured performance need. They are overrides (see the container
@@ -45,7 +59,8 @@ the edges; its rules are in `python/01-ddd-ports-adapters.md`.
 ```
 
 - `type` MUST be `object`. `title` and `version` SHOULD be present (`version`
-  defaults to `1.0.0`).
+  defaults to `1.0.0`). Check: the loader test registers a non-object schema
+  and asserts `SCHEMA_INVALID`.
 - Two file shapes are accepted by a conforming loader: the **envelope**
   (`{name, version, schema, …}`) and the **bare schema** (`title`/`version`
   at the root); storage is envelope-only.
@@ -81,42 +96,67 @@ For each schema the registry generates three models:
 | Create | `{Pascal}Create` | domain only; `required` honoured | POST body |
 | Update | `{Pascal}Update` | domain only; every field optional | PATCH body |
 
-Type mapping: `string`→`str`, `string/uuid`→UUID, `string/date-time`→datetime,
-`integer`→int, `number`→float, `boolean`→bool, `array`→list of resolved item
-type, `object`→dict. `default` becomes the field default. Go generates the
-equivalent structs plus enum types.
+Each stack maps JSON Schema types to its native types in **one table** in
+its language folder (one mapping function, no second site); `string/uuid`
+and `string/date-time` map to the stack's UUID and timestamp types, never
+to plain strings; `array` maps to a list of the resolved item type;
+`default` becomes the field default; `enum` becomes a closed type where the
+language has one. Check: a generated-model test round-trips a sample
+payload per JSON Schema type and asserts the native type.
 
 ## 6. Vendor extensions (`x-*`)
 
 Extensions are declarative policy on the generated surface. They are read once
 at router-build time and must raise on malformed values; a typo must never
-silently decide a policy question.
+silently decide a policy question. Two tables: what a schema file may
+declare (input), and what the OpenAPI document carries (output).
 
-| Key | Meaning | Rules |
-|---|---|---|
-| `x-collection` | persist to a differently named collection | migration/disambiguation tool only; requires `x-collection-reason`; every code path that resolves a collection name uses the one registry accessor |
-| `x-owner-field` | field holding the owning user id for ownership scoping | absent = scoped on `created_by` (default deny); string = scoped on that field; `null`/`false` = shared, requires `x-owner-reason`; prefer a Tier 2 view over `null` |
-| `x-owner-reason`, `x-collection-reason` | human justification | required with the override they explain |
+**Schema-file extensions (input; declared here; undeclared fails)**
 
-| `x-view` | the view descriptor (projection, filters, sort, limits, roles) for a Tier 2 read | lives in the view file; emitted onto the view operation in the OpenAPI document so the frontend generator has one input |
-| `x-ui-widget`, `x-ui-group`, `x-ui-order`, `x-ui-hidden` | presentation hints for generated screens (`typescript/12`) | optional; closed vocabulary per key; never change validation or policy; a hint the generator does not know fails generation |
+| Key | Meaning | Rules | Status |
+|---|---|---|---|
+| `x-collection` | persist to a differently named collection | migration/disambiguation tool only; requires `x-collection-reason`; every code path that resolves a collection name uses the one registry accessor | shipped |
+| `x-owner-field` | field holding the owning user id for ownership scoping | absent = scoped on `created_by` (default deny); string = scoped on that field; `null`/`false` = shared, requires `x-owner-reason`; prefer a Tier 2 view over `null` | shipped |
+| `x-owner-reason`, `x-collection-reason` | human justification | required with the override they explain | shipped |
+| `x-ui-widget`, `x-ui-group`, `x-ui-order`, `x-ui-hidden` | presentation hints for default screens | optional; closed vocabulary per key; never change validation or policy; a hint the generator does not know fails generation | frontend track, design (`shared/13` §2a); a loader that does not implement the track rejects them like any undeclared key until it declares them |
 
 Add a new extension only with: a registry accessor, a fail-closed parser, a
 test over every schema, and a line in this table. An undeclared `x-*` key
 MUST fail schema registration (`SCHEMA_INVALID`), never warn; consumers
-declare custom extensions in configuration.
+declare custom extensions in configuration. Check: a loader test registers
+a schema carrying an unknown `x-*` key and asserts `SCHEMA_INVALID`.
 
-### 6a. Extensions survive into the OpenAPI document
+View specs (`shared/03` §7) are separate files with plain keys; they are
+not schema-file extensions and declare no `x-*` of their own.
 
-Every declared `x-*` key, `x-schema-version`, the capability or role tags
-of an operation, and operation ids equal to the registry's
-`<schema>_<operation>` names MUST be emitted into the generated OpenAPI
-document. The document is the only input of the frontend generator
-(`typescript/12` §1) and the parity test across REST, MCP and screens
-(`shared/13`); a backend that drops an extension on the way to OpenAPI
-breaks a consumer it cannot see. Check: a test loads every schema, builds
-the document in-process, and asserts each extension is present on the
-corresponding operation or component schema.
+**OpenAPI emission (output; produced by the backend, never written by hand)**
+
+| Emitted key | Placed on | Source |
+|---|---|---|
+| every declared input extension above | the component schema or operation it was declared on | the schema file |
+| `x-schema-version` | each Document, Create and Update component schema | the schema envelope's `version` |
+| `x-view` | the view's read operation | the view spec file, copied whole (projection, filters, sort, limits, roles, scope) |
+| operation ids | each operation | the registry's `<schema>_<operation>` names, the same names the MCP tools use |
+| capability or role tags | each operation | the guards and view roles the registry resolved |
+
+### 6a. The OpenAPI document is the contract for every downstream generator
+
+Every row of the emission table MUST appear in the generated OpenAPI 3.1
+document, and the document MUST be buildable **from files alone** (schema
+loader → OpenAPI builder, no running application, no database), so that
+pre-commit generation stays safe. The document is the only input any
+downstream generator may read: typed clients, the agent surface's parity
+test (`shared/13` §2) and, under the frontend track, default screens all
+consume the document and never the backend's schema files or source. A
+downstream generator that finds a required key missing fails with a named
+error and never guesses. A backend that drops an extension on the way to
+OpenAPI breaks a consumer it cannot see.
+
+Check: a test loads every schema and view, builds the document with the
+file-only builder, and asserts each emission-table row is present on the
+corresponding operation or component schema; a second test asserts the
+file-only document equals the one served at `/openapi.json` by a running
+test engine.
 
 ## 7. Schema envelopes and versioning
 
@@ -129,8 +169,11 @@ corresponding operation or component schema.
 - Documents are always **written** at the current version, and
   `schema_version` MUST be written on every row (two reference
   implementations never wrote it, which made their migration layers fail on
-  every read). **Read-time migrations** run when `doc.schema_version !=
-  current`; they are registered in one migration registry.
+  every read). Check: the hex check `schema version written` in the
+  contract-fuzz suite, and the repository contract suite's create case
+  asserting the field on the stored row. **Read-time migrations** run when
+  `doc.schema_version != current`; they are registered in one migration
+  registry.
 - A request MAY select a version (`X-Schema-Version` or `?version`); the
   body is validated against **that** version's Create/Update variant and
   stored at latest after migration; the response is projected to the
@@ -145,7 +188,9 @@ corresponding operation or component schema.
 ## 8. The registry
 
 - The schema registry loads at startup and is a singleton (Python) or an
-  engine-owned instance (Go). Tests MUST reset it between cases.
+  engine-owned instance (Go). Tests MUST reset it between cases. Check: an
+  autouse reset fixture (or per-test engine teardown), and one test that
+  registers a schema in one case and asserts it is absent in the next.
 - The registry is the only reader of schema files. Everything else asks the
   registry: names, versions, models, collection names, owner fields.
 - Everything derived from a schema is derived at startup, once. Request-time
