@@ -195,6 +195,16 @@ appears (missing migration or column); a build fails; a handoff lacks
 verification, summary, or state-file updates; a file-ownership violation
 occurs.
 
+### G.1 — Look at it
+
+Before the quality gate, capture every new or changed screen and state in a
+real browser at desktop and phone width and in each colour mode, and have a
+person review the captures. Axe and structure tests prove the markup; they do
+not notice a default-styled button, a raw validator message, a missing
+default value or a developer error page. Check: the capture script exists and
+its output is attached to the handoff; each defect found becomes a
+remediation row (`specs/05` §2) before the slice is called done.
+
 ## 5. The definition of done
 
 All tasks checked; migration or registration validated; defensive conversion
